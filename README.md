@@ -3,12 +3,14 @@
 現在は街を探索したり、チャットしたり、yotube/ニコ動の動画を見れるくらいしか機能がありませんが、<br>
 将来的には色々なゲームがジャンルを問わず集合するようなゲームにしたいと思っています。<br>
 <br>
-・動画再生にはmp4に対応したコーデックが必要です（推奨:K-Lite Codec Pack）
+・動画再生にはmp4に対応したコーデックが必要です（推奨:K-Lite Codec Pack）<br>
 <br>
-実装予定：クレーンゲーム機能、レースゲーム<br>
+・実装予定：クレーンゲーム機能、レースゲーム<br>
 <br>
 ・動画再生にYotube-dlを使用させて頂いています。(https://github.com/rg3/youtube-dl/)<br>
 対応サイト→https://github.com/rg3/youtube-dl/blob/master/docs/supportedsites.md<br>
+<br>
+・開発環境:Visual Studio Community 2013<br>
 <br>
 使用ライブラリ<br><br>
 -cient<br>
