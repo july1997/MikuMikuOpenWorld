@@ -9,8 +9,13 @@
 対応サイト→https://github.com/rg3/youtube-dl/<br>
 <br>
 使用ライブラリ<br>
+-cient
 ・DXライブラリ<br>
 ・Boost<br>
 ・Bullet<br>
 ・Crypto++<br>
-・http://slis.tsukuba.ac.jp/~fujisawa.makoto.fu/様の　OBJファイル読み込み機能(http://book.mynavi.jp/support/pc/3381/)
+・http://slis.tsukuba.ac.jp/~fujisawa.makoto.fu/様の　OBJファイル読み込み機能(http://book.mynavi.jp/support/pc/3381/)<br>
+<br>
+-server<br>
+・Boost<br>
+・Crypto++<br>
