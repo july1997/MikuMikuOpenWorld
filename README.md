@@ -9,7 +9,7 @@
 対応サイト→https://github.com/rg3/youtube-dl/<br>
 <br>
 使用ライブラリ<br>
--cient
+-cient<br>
 ・DXライブラリ<br>
 ・Boost<br>
 ・Bullet<br>
