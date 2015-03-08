@@ -82,7 +82,7 @@ void NetworkPlayer::addPlayer(const char *FileName)
 		controller.push_back(bullet->createCharacter(world, VGet(0, 10, 0), 2.f));
 		bullet->controlCharacter(controller[playernun], 0, 0, 0, 0, 0, 0.5f);
 
-		commnad.resize(commnad.size() + 1);		// ()“à‚Ì”š‚ª—v‘f”‚É‚È‚é
+		commnad.resize(commnad.size() + 1);		// ()å†…ã®æ•°å­—ãŒè¦ç´ æ•°ã«ãªã‚‹
 		for (size_t i = 0; i < commnad.size(); i++){
 			commnad[i].resize(6);
 		}
@@ -253,57 +253,10 @@ void NetworkPlayer::updatePlayerVec()
 
 void NetworkPlayer::deletePlayer(int playernun_)
 {
-	//ƒ‚ƒfƒ‹‚ğíœ
+	//ãƒ¢ãƒ‡ãƒ«ã‚’å‰Šé™¤
 	MV1DeleteModel(modelhandles[playernun_]);
 
 	deleteplayernunber.push_back(playernun_);
 
 	playernun--;
-
-	/*
-	std::vector<std::vector<bool>>::iterator commnadi = commnad.begin();
-	commnadi += playernun_;
-	commnad.erase(commnadi);
-
-	std::vector<VECTOR>::iterator veci = pos.begin();
-	veci += playernun_;
-	pos.erase(veci);
-	veci = rot.begin();
-	veci += playernun_;
-	rot.erase(veci);
-
-	std::vector<int>::iterator hadlei = animehandle.begin();
-	hadlei += playernun_;
-	animehandle.erase(hadlei);
-	hadlei = controller.begin();
-	hadlei += playernun_;
-	controller.erase(hadlei);
-	hadlei = modelhandles.begin();
-	hadlei += playernun_;
-	modelhandles.erase(hadlei);
-	hadlei = nowanimeindex.begin();
-	hadlei += playernun_;
-	nowanimeindex.erase(hadlei);
-	hadlei = blendanimehandle.begin();
-	hadlei += playernun_;
-	blendanimehandle.erase(hadlei);
-
-	std::vector<float>::iterator timei = animetotaltime.begin();
-	timei += playernun_;
-	animetotaltime.erase(timei);
-
-	timei = animetime.begin();
-	timei += playernun_;
-	animetime.erase(timei);
-
-	timei = rate.begin();
-	timei += playernun_;
-	rate.erase(timei);
-
-	std::vector<bool>::iterator flagi = brendflag.begin();
-	flagi += playernun_;
-	brendflag.erase(flagi);
-
-	playernun--;
-	*/
 }
