@@ -6,7 +6,7 @@
 実装予定：クレーンゲーム機能、レースゲーム<br>
 <br>
 ・動画再生にYotube-dlを使用させて頂いています。(https://github.com/rg3/youtube-dl/)<br>
-対応サイト→https://github.com/rg3/youtube-dl/<br>
+対応サイト→https://github.com/rg3/youtube-dl/blob/master/docs/supportedsites.md<br>
 <br>
 使用ライブラリ<br><br>
 -cient<br>
