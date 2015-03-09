@@ -540,7 +540,7 @@ void Scene::yotubeQuestionnaire(bool Enquete)
 
 			if (Enquete)
 			{
-				if (timer > network->PlayStartTime + (t_startenquettime * qtime) - t_substartenquettime && questionnaire == 0)
+				if (timer > network->PlayStartTime + (t_limitenquetegettime * qtime) - t_substartenquettime && questionnaire == 0)
 				{
 					questionnaire = 1;
 
@@ -578,8 +578,6 @@ void Scene::yotubeQuestionnaire(bool Enquete)
 					//集計時間を過ぎた
 					if (timer > network->PlayStartTime + (t_limitenquetegettime * qtime))
 					{
-						if (network->sendyotubecommand == 0)network->sendyotubecommand = 2;
-
 						if (yetq != 1)yetq = 1;
 
 						//延長しない
@@ -599,11 +597,18 @@ void Scene::yotubeQuestionnaire(bool Enquete)
 
 							qtime++;
 						}
+
+						if (network->Extension ==-1 && network->sendyotubecommand == 0)
+						{
+							network->sendyotubecommand = 2;
+						}
 					}
 					else
 					{
 						if (yetq == 0)ui->drawStringToBox(yotubebox, "アンケート終了まであと : " + std::to_string((network->PlayStartTime + (t_limitenquetegettime * qtime)) - timer), 20, 114 + 90, font);
 						else ui->drawStringToBox(yotubebox, "アンケート集計まであと : " + std::to_string((network->PlayStartTime + (t_limitenquetegettime * qtime)) - timer), 20, 114 + 90, font);
+
+						if (network->Extension != -1)network->Extension = -1;
 					}
 				}
 			}

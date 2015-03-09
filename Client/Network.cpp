@@ -495,13 +495,23 @@ void Network::receive_end(const boost::system::error_code& error)
 
 					if (nstr == "g")
 					{
-						if (str.substr(2, str.length() - 1) != "0")
+						if (str.substr(2, str.length() - 1) == "1")
+						{
+							if (!tell)
+							{
+								YoutubeMessege.push_back("“®‰æ‚ªÄ¶’†‚Å‚·Ÿ‚ÌÄ¶‚Ü‚Å‚¨‘Ò‚¿‚­‚¾‚³‚¢");
+								tell = 1;
+							}
+						}
+						else if (str.substr(2, str.length() - 1) != "0")
 						{
 							if (YoutubeURL != str.substr(2, str.length()))
 							{
 								YoutubeURL = str.substr(2, str.length());
 
 								YoutubeMessege.push_back(YoutubeURL + "‚ÌÄ¶‚ğ€”õ‚µ‚Ü‚·");
+
+								tell = 0;
 							}
 						}
 					}
@@ -521,7 +531,7 @@ void Network::receive_end(const boost::system::error_code& error)
 					{
 						std::string res = str.substr(2, 1);
 
-						if (std::stoi(res) != -1)
+						if (std::stoi(res) != 2)
 						{
 							std::string pas = str.substr(3, str.length());
 							int k = std::stoi(pas) - 100;
@@ -530,7 +540,7 @@ void Network::receive_end(const boost::system::error_code& error)
 							{
 								Extension = 1;
 
-								YoutubeMessege.push_back("”½‘Î : " + pas + "^¬ : " + std::to_string(-k) + " “®‰æ‚ÌÄ¶‚ğ‰„’·‚µ‚Ü‚·");
+								YoutubeMessege.push_back("”½‘Î : " + pas + "^¬ : " + std::to_string(-k));
 
 								YoutubeMessege.push_back(" “®‰æ‚ÌÄ¶‚ğ‰„’·‚µ‚Ü‚·");
 							}

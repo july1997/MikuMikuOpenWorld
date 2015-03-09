@@ -45,9 +45,9 @@ public:
 
 	std::vector<std::string> YoutubeURL;
 	time_t playtime; 
-	bool gettime = 0, Questionnairek = 0;
+	bool gettime = 0, Questionnairek = 0; int peplecounter = 0;
 	int people = 0, Questionnaire = 0,qtimer = 1, finished = 0;
-	double  Percentage=0;
+	double  Percentage = -1; bool alcome = 0;
 	//保存用
 	std::vector<int> storageLogout;
 	std::vector<bool>setup;
@@ -217,6 +217,11 @@ public:
 	int getMessegeOrigin(int ConnectionNumber)
 	{
 		return MessegeOrigin[ConnectionNumber];
+	}
+
+	void resetYotube()
+	{
+		people = 0;
 	}
 };
 
@@ -704,8 +709,8 @@ public:
 							databese->finished = 0;
 
 							databese->Questionnairek = 0;
-							databese->qtimer = 0;
-							databese->Percentage = 0;
+							databese->qtimer = 1;
+							databese->Percentage = -1;
 						}
 
 						//ダウンロード時間が決まっていて待機時間以内の時と決まっていない時
@@ -724,7 +729,7 @@ public:
 						{
 							//ただいま再生中
 
-							sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "g" + std::to_string(0));
+							sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "g" + std::to_string(1));
 						}
 					}
 
@@ -772,35 +777,73 @@ public:
 						time_t timer;
 						time(&timer);
 
-						//アンケート集計時間を超えている
-						if (timer >= databese->playtime + (t_limitenquetegettime * databese->qtimer))
+						if (databese->qtimer == -1)
 						{
-							databese->Percentage = (double)databese->Questionnaire / (double)databese->people;
-
-							if (databese->Percentage > 0.5)
-							{
-								//延長しない
-								databese->Questionnairek = 0;
-
-								databese->qtimer = 1;
-							}
-							else
-							{
-								//延長
-								databese->Questionnairek = 1;
-
-								databese->qtimer++;
-							}
-
-							sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(databese->Questionnairek) + std::to_string((int)databese->Percentage * 100));
+							sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(0) + std::to_string((int)(databese->Percentage * 100)));
 						}
 						else
 						{
-							//アンケート集計時間内
-							sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(-1));
-						}
+							//アンケート集計時間を超えている
+							if (timer >= databese->playtime + (t_limitenquetegettime * databese->qtimer))
+							{
+								if (databese->alcome)
+								{
+									databese->Percentage = -1;
+								}
 
-						databese->Questionnaire = 0;
+								if (databese->Percentage == -1)
+								{
+									databese->Percentage = (double)databese->Questionnaire / (double)databese->people;
+
+									if (databese->Percentage > 0.5)
+									{
+										//延長しない
+										databese->Questionnairek = 0;
+
+										databese->qtimer = -1;
+									}
+									else
+									{
+										//延長
+										databese->Questionnairek = 1;
+
+										databese->qtimer++;
+									}
+
+									databese->Questionnaire = 0;
+								}
+
+								databese->alcome = 1;
+
+								sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(databese->Questionnairek) + std::to_string((int)(databese->Percentage * 100)));
+							}
+							else
+							{
+								if (databese->alcome == 1)
+								{
+									if (databese->Questionnairek == 0)
+									{
+										sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(0) + std::to_string((int)(databese->Percentage * 100)));
+									}
+									else
+									{
+										if (timer < databese->playtime + (t_limitenquetegettime * databese->qtimer))
+										{
+											sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(databese->Questionnairek) + std::to_string((int)(databese->Percentage * 100)));
+										}
+										else
+										{
+											sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(2));
+										}
+									}
+								}
+								else
+								{
+									//アンケート集計時間内
+									sendCommand((char)std::bitset<7>(b_getyotubeRequest).to_ulong(), "b" + std::to_string(2));
+								}
+							}
+						}
 					}
 
 					//再生終了
@@ -886,8 +929,8 @@ public:
 	const char* b_crypto			= "0111111";
 
 	//ダウンロードを待つ時間（秒）
-	const int t_waitdownload = 60;
-	//アンケートを収集する時間（秒）
+	const int t_waitdownload = 120;
+	//アンケートを収集する時間（秒）クライアント側と合わせてください
 	const int t_limitenquetegettime = 300;
 
 	//デミリタ
@@ -988,6 +1031,16 @@ public:
 	void inputMessege(int ConnectionNumber,std::string str)
 	{
 		data->inputMessege(ConnectionNumber, str);
+	}
+
+	void reset()
+	{
+		data->resetYotube();
+	}
+
+	void yotube(std::string str)
+	{
+		data->YoutubeURL.push_back(str);
 	}
 };
 
@@ -1122,6 +1175,29 @@ int main()
 			}
 		}
 
+		if (st == std::string("r") || st == std::string("reset"))
+		{
+			conect.reset();
+		}
+
+		if (st == std::string("y") || st == std::string("youtube"))
+		{
+			std::cout << "youtube : ";
+
+			char sc[256];
+			std::cin.getline(sc, 100);
+
+			std::string stc(sc);
+
+			if (stc.size() > 0)
+			{
+				conect.yotube(stc);
+			}
+			else
+			{
+				std::cout << "system : " << "please enter the messege" << std::endl;
+			}
+		}
 
 	}
 }

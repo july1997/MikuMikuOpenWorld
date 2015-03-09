@@ -28,10 +28,9 @@ class Scene
 	bool questionnaire = 0, yetq=0;
 	int qtime = 1;
 	time_t RequestTime = 0;
-	//アンケートの収集を開始する時間（秒)(t_startenquettime*回数 -t_substartenquettime)
-	const int t_startenquettime = 300;
+	//アンケートの収集している間（秒)(t_limitenquetegettime*回数 -t_substartenquettime)
 	const int t_substartenquettime = 60;
-	//アンケートを収集する時間（秒）
+	//アンケートを収集を終了する時間（秒）サーバー側と合わせてくだしあ
 	const int t_limitenquetegettime = 300;
 
 	size_t displaytedsize = 0;

@@ -167,6 +167,8 @@ private:
 	std::vector<std::string> Messege;
 	size_t MessegeNunber = 0;
 
+	bool tell = 0;
+
 	bool comVECTOR(VECTOR v1, VECTOR v2);
 	bool comQuaternion(btQuaternion &v1, btQuaternion &v2);
 };

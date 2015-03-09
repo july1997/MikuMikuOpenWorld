@@ -527,7 +527,7 @@ void Bullet_physics::controlCharacter(int CharacterHandel, int Left, int Right, 
 	btVector3 walkDirection;
 	if (character[CharacterHandel]->onGround())//’n–Ê‚Ìã‚É‚¢‚È‚¢‚¾‚¯d—Í‚ğ‚©‚¯‚é
 	{
-		walkDirection = btVector3(0.0, -0.00001, 0.0);
+		walkDirection = btVector3(0.0, -0.001, 0.0);
 	}
 	else
 	{

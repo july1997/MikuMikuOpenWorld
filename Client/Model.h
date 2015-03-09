@@ -3,6 +3,7 @@
 //キャラクター、NPC、乗り物などの基底クラス
 
 #include "DxLib.h"
+#include <math.h>
 
 class Model
 {
@@ -53,6 +54,12 @@ public:
 	int getModelHandle()
 	{
 		return modelhandle;
+	}
+
+	float calculation_distance(VECTOR v, VECTOR v2)
+	{//ベクトルの距離の二条を計算する
+		float distance_f = pow((v.x - v2.x), 2) + pow((v.y - v2.y), 2) + pow((v.z - v2.z), 2);
+		return distance_f;
 	}
 };
 

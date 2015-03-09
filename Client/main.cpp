@@ -196,7 +196,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				//5分（300*10000000ナノ秒）以上だったら
 				if (yotube.getMovieStopTime() > 3000000000)ank = 1;
 				else ank = 0;
-
+				
 				network.YoutubeMessege.push_back("動画の準備が完了しました");
 
 				std::string hun = std::to_string((double)(yotube.getMovieStopTime() / 60) / 10000000);
@@ -236,13 +236,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			yotube.updateYotubeMovie();
 			
 			int volume = 0;
-			float Length = VSize(object.getPos()) - VSize(player.getPos());
-
-			if (Length<0)volume = (int)Length * 10;
-			else if (Length>0)volume = -(int)Length * 10;
-
-			if (Length < 100 && Length > -100)volume = -1000;
-			if (Length > 1000 && Length < -1000)volume = -10000;
+			//距離を計算
+			float Length = sqrt(player.calculation_distance(player.getPos(), object.getPos()));
+			volume = -(int)Length*Length/100;
+			if (Length < 100)volume = -100; else if (Length > 1000)volume = -10000;
+			yotube.setVolume(volume);
 
 			yotube.setVolume(volume);
 
@@ -250,9 +248,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				network.YoutubeMessege.push_back("動画の再生の再生が終了しました");
 
+				network.YoutubeURL = "";
+				network.Extension = -1;
+				network.PlayStartTime = 0;
+
 				network.sendyotubecommand = 3 ;
 
-				if (network.Extension == 0)yotube.pauseMovie();
+				yotube.setVolume(-10000);
 
 				movieflag = 0;
 			}
