@@ -9,6 +9,8 @@
 <br>
 ・動画再生にYotube-dlを使用させて頂いています。(https://github.com/rg3/youtube-dl/)<br>
 対応サイト→https://github.com/rg3/youtube-dl/blob/master/docs/supportedsites.md<br>
+動画の再生同期は時刻で取っています。PCの時刻が正確でないと同期がずれる、及び再生できない<br>
+場合があります。サーバー側の時刻はntp.nict.jpと同期しています<br>
 <br>
 ・開発環境:Visual Studio Community 2013<br>
 <br>
