@@ -38,3 +38,27 @@ void Camera::MouseCamera(VECTOR camerapos,VECTOR addVce)
 	CamPos = VTransform(VTransform(VGet(0.0f, 17.75f, CamR), RotV), RotH);
 	SetCameraPositionAndTargetAndUpVec(VAdd(camerapos, CamPos), VAdd(camerapos, addVce), VGet(0, 1, 0));
 }
+
+void Camera::CameraAdditionally(VECTOR pos,VECTOR rot)
+{
+	// マウス入力の取得
+	MoveZ = -GetMouseWheelRotVol();
+
+	// マウスの情報からカメラの情報に変換
+	CamR += MoveZ * ZoomRate;
+
+	// 補正
+	if (CamR > MaxR)CamR = MaxR;
+	if (CamR < MinR)CamR = MinR;
+
+	RotV = MGetRotX(rot.x);
+	RotH = MGetRotY(rot.y);
+	MATRIX RotZ = MGetRotZ(rot.z);
+	CamPos = VTransform(VTransform(VTransform(VGet(0.0f, 30.0f, CamR), RotV), RotH), RotZ);
+	SetCameraPositionAndTargetAndUpVec(VAdd(pos, CamPos), pos, VGet(0, 1, 0));
+}
+
+void Camera::setCamera(VECTOR camerapos, VECTOR addVce)
+{
+	SetCameraPositionAndTargetAndUpVec(VAdd(camerapos, CamPos), VAdd(camerapos, addVce), VGet(0, 1, 0));
+}

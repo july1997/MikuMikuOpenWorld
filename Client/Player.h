@@ -36,6 +36,8 @@ protected:
 
 public:
 	
+	size_t vehicle = 0;
+
 	bool right, left, backward, forward, jump, run;
 
 	Player(Bullet_physics *bullet_, int world);
@@ -62,6 +64,8 @@ public:
 	void playerMovementKeyboard();
 
 	void setPlayerMovement(bool left_, bool right_, bool backward_, bool forward_, bool jump_, bool run_);
+
+	void setPosBullet(VECTOR pos);
 
 	void update();
 

@@ -65,7 +65,7 @@ void Crypto::sendRsaPublicKey()
 	pubkeysink.MessageEnd();
 
 	//rsa publicƒL[‚ğ‘—‚é
-	sendEndOfStringsSynchro(pubkeyfile);
+	sendEndOfStringsSynchro("c" + pubkeyfile);
 }
 
 std::string Crypto::decryptionByRsa(std::string str)

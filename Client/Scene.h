@@ -39,6 +39,7 @@ class Scene
 
 public:
 	Scene(Network *network_);
+	~Scene(){ delete ui; }
 
 	bool Login();
 

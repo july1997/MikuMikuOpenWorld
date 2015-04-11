@@ -13,6 +13,8 @@
 #include "Object.h"
 #include "NetworkPlayer.h"
 #include "Scene.h"
+#include "Car.h"
+#include "shadow.h"
 
 #include <thread>
 
@@ -28,7 +30,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	Bullet_physics bullet;
 	int world = bullet.createWorld();
 
+	ObjectManager objectmanager(&bullet, world);
+
 	Player player(&bullet, world);
+	/*
 	switch (GetRand(12))
 	{
 	case 0:
@@ -71,10 +76,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		player.loadModel("model/Luka_v3.3/巡音ルカ.mv1");
 		break;
 	}
+	*/
+
+	player.loadModel("model/Tda式ミクワンピース/Tda式ミクワンピースRSP.mv1");
 
 	NetworkPlayer networkplayer(&bullet, world);
 
-	Network network(&player, &networkplayer);
+	Network network(&player, &networkplayer, &objectmanager);
 	Scene scene(&network);
 	scene.Login();
 
@@ -82,19 +90,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	player.attachAnime(0);
 
 	Model stage;
-	stage.loadModel("stage/空色町1.52/sorairo1.52.x");
+	stage.loadModel("stage/空色町1.52/sorairo1.52.mv1");
+	//stage.loadModel("stage/PQ_Remake_AKIHABARA/test.mv1");
+	//stage.setPos(VGet(-800, -36, -1800));
 	stage.setScale(10.0f);
 
 	bullet.createGroundBodytoMesh(stage.getModelHandle(), world);
 
 	Model sky;
 	sky.loadModel("stage/スカイドーム/dome303.X");
+	//sky.setScale(1.5f);
 	sky.setScale(10.0f);
 
 	Object object;
-	object.loadModel("stage/スクリーンＥＸ/スクリーンEX2.x");
+	object.loadModel("stage/スクリーンＥＸ/スクリーンEX2.mv1");
 	object.setScale(10.f);
-	object.setRot(VGet(0,-DX_PI_F/4,0));
+	//object.setPos(VGet( -50,-8, 30));
+	object.setRot(VGet(0, -DX_PI_F / 4, 0));
 	object.setPos(VGet(-220.11, 2, 1030));
 
 	Camera camera;
@@ -103,7 +115,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int movieflag = 0;
 	yotube.setScreen(object.getModelHandle(), 3);
 
+	shadow Shadow;
+
 	bool ank = 1;
+
+	bool vkey = 0;
 
 	for (size_t i = 0; i < networkplayer.getModelHandlesSize(); i++)
 	{
@@ -113,7 +129,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 	}
 
-	std::thread t([&network](){ network.update(); });
+	std::thread t;
+	if(network.useNetwork == 1)t = std::thread([&network](){ network.update(); });
 
 	while (ProcessMessage() == 0 && scene.exitConfirm() == 0)
 	{
@@ -127,7 +144,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		SetCameraNearFar(3.0f, 30000.0f);
+		SetCameraNearFar(3.0f, 10000.0f);
 
 		if (scene.inputting())player.playerMovementKeyboard();
 		else player.setPlayerMovement(0,0,0,0,0,0);
@@ -163,24 +180,97 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		camera.MouseCamera(player.getPos(),VGet(0,13.8f,0));
+		if (player.vehicle !=0)
+		{
+			camera.CameraAdditionally(objectmanager.getCarPos(player.vehicle - 1), objectmanager.getCar(player.vehicle - 1)->getRot());
 
-		object.draw();
+			player.setPosBullet(VAdd(objectmanager.getCarPos(player.vehicle - 1),VGet(0,10,0)));
 
-		networkplayer.drawPlayers();
+			objectmanager.driveCar(player.vehicle - 1);
+		}
+		else
+		{
+			camera.MouseCamera(player.getPos(), VGet(0, 13.8f, 0));
+		}
 
 		//player.playerMovementMouse(stage.getModelHandle());
 
-		player.draw();
+		objectmanager.update();
 
 		sky.draw();
+		sky.setPos(player.getPos());
+
 		stage.draw();
 
-		scene.displayMyName();
-		scene.displayName();
+		object.draw();
+		objectmanager.draw();
+		if (player.vehicle == 0)player.draw();
+		networkplayer.drawPlayers();
 
-		scene.displayChatToScreen();
-		scene.yotubeRequest();
+
+		if (player.vehicle != 0)
+		{
+			btScalar speed = objectmanager.getSpeed(player.vehicle - 1);
+			DrawFormatString(0, 0, -1, "speed %f", -speed / 10);
+
+			if (-speed / 10 < 1.f)
+			{
+				DrawString(ConvWorldPosToScreenPos(objectmanager.getCarPos(player.vehicle - 1)).x, ConvWorldPosToScreenPos(objectmanager.getCarPos(player.vehicle - 1)).y - 200.f, "Vキーを押して降りる", -1);
+
+				if (CheckHitKey(KEY_INPUT_V) == 1)vkey = 1;
+				if (vkey == 1 && CheckHitKey(KEY_INPUT_V) == 0)
+				{
+					network.downOwnership(player.vehicle - 1);
+
+					player.setPosBullet(VAdd(objectmanager.getCarPos(player.vehicle - 1), VGet(25, 15, 25)));
+
+					player.vehicle = 0;
+					vkey = 0;
+				}
+			}
+		}
+
+		if (player.vehicle == 0)
+		{
+			for (size_t i = 0; i < objectmanager.carSize(); i++)
+			{
+				if (sqrt(player.calculation_distance(player.getPos(), objectmanager.getCarPos(i))) < 30.0f)
+				{
+					DrawString(ConvWorldPosToScreenPos(objectmanager.getCarPos(i)).x, ConvWorldPosToScreenPos(objectmanager.getCarPos(i)).y - 200.f, "Vキーを押して乗る", -1);
+
+					if (CheckHitKey(KEY_INPUT_V) == 1)vkey = 1;
+					if (vkey == 1 && CheckHitKey(KEY_INPUT_V) == 0)
+					{
+						network.getOwnership(i);
+
+						if (objectmanager.getOwnership(i) == 0)
+						{
+							player.vehicle = i + 1;
+							vkey = 0;
+						}
+						else if (objectmanager.getOwnership(i) == 1)
+						{
+							vkey = 0;
+						}
+
+					}
+				}
+			}
+		}
+		else
+		{
+			if (player.vehicle == 0)vkey = 0;
+		}
+
+
+		if (network.useNetwork == 1)
+		{
+			scene.displayMyName();
+			scene.displayName();
+
+			scene.displayChatToScreen();
+			scene.yotubeRequest();
+		}
 
 		if (network.YoutubeURL.size() != 0 && movieflag == 0)
 		{
@@ -260,9 +350,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		scene.yotubeQuestionnaire(ank);
+		if (network.useNetwork == 1)
+		{
+			scene.yotubeQuestionnaire(ank);
 
-		scene.displayChat();
+			scene.displayChat();
+		}
 
 		network.candelete = 1;
 
@@ -271,7 +364,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Fps.controlFps();
 	}
 
-	t.detach();
+	if (network.useNetwork == 1)t.detach();
 
 	network.close();
 

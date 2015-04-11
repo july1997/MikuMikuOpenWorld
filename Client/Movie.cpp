@@ -95,32 +95,39 @@ void Movie::initMovie(const char *MovieName, int &GraphHandle)
 	VIDEOINFOHEADER *pVideoInfoHeader =
 		(VIDEOINFOHEADER *)am_media_type.pbFormat;
 
-	if (am_media_type.lSampleSize == 0)MessageBox(GetMainWindowHandle(), "コーデックが対応していません。mp4を再生できるコーデックをインストールしてください\nK-Lite_Codec_Packがおすすめ", "error", MB_OK);//エラー表示
+	if (am_media_type.lSampleSize == 0)
+	{
+		MessageBox(GetMainWindowHandle(), "コーデックが対応していません。mp4を再生できるコーデックをインストールしてください\nK-Lite_Codec_Packがおすすめ", "error", MB_OK);//エラー表示
 
-	// 再生開始
-	//hr = pMediaControl->Run();
-	pMediaSeeking->GetDuration(&plength);
-	pSampleGrabber->SetBufferSamples(TRUE);
+		initmovie = 0;
+	}
+	else
+	{
+		// 再生開始
+		//hr = pMediaControl->Run();
+		pMediaSeeking->GetDuration(&plength);
+		pSampleGrabber->SetBufferSamples(TRUE);
 
-	pVideoInfoHeader->bmiHeader.biWidth = 1024;
-	pVideoInfoHeader->bmiHeader.biHeight = 512;
-	pVideoInfoHeader->AvgTimePerFrame = (REFERENCE_TIME)floor((10000000.0 / 29 + 0.5));
-	pSampleGrabber->GetConnectedMediaType(&am_media_type);
-	// ビデオ ヘッダーへのポインタを獲得する。
-	pVideoInfoHeader = (VIDEOINFOHEADER*)am_media_type.pbFormat;
+		pVideoInfoHeader->bmiHeader.biWidth = 1024;
+		pVideoInfoHeader->bmiHeader.biHeight = 512;
+		pVideoInfoHeader->AvgTimePerFrame = (REFERENCE_TIME)floor((10000000.0 / 29 + 0.5));
+		pSampleGrabber->GetConnectedMediaType(&am_media_type);
+		// ビデオ ヘッダーへのポインタを獲得する。
+		pVideoInfoHeader = (VIDEOINFOHEADER*)am_media_type.pbFormat;
 
-	// ビデオ ヘッダーには、ビットマップ情報が含まれる。
-	// ビットマップ情報を BITMAPINFO 構造体にコピーする。
-	ZeroMemory(&BitmapInfo, sizeof(BitmapInfo));
-	CopyMemory(&BitmapInfo.bmiHeader, &(pVideoInfoHeader->bmiHeader), sizeof(BITMAPINFOHEADER));
-	BmpHeader = BitmapInfo.bmiHeader;
-	BmpBufferSize = BmpHeader.biSizeImage;
-	BmpBuffer = malloc(BmpBufferSize);
+		// ビデオ ヘッダーには、ビットマップ情報が含まれる。
+		// ビットマップ情報を BITMAPINFO 構造体にコピーする。
+		ZeroMemory(&BitmapInfo, sizeof(BitmapInfo));
+		CopyMemory(&BitmapInfo.bmiHeader, &(pVideoInfoHeader->bmiHeader), sizeof(BITMAPINFOHEADER));
+		BmpHeader = BitmapInfo.bmiHeader;
+		BmpBufferSize = BmpHeader.biSizeImage;
+		BmpBuffer = malloc(BmpBufferSize);
 
-	// 画像ハンドルを作成する
-	GraphHandle = MakeGraph(abs(BmpHeader.biWidth), abs(BmpHeader.biHeight));
+		// 画像ハンドルを作成する
+		GraphHandle = MakeGraph(abs(BmpHeader.biWidth), abs(BmpHeader.biHeight));
 
-	initmovie = 1;
+		initmovie = 1;
+	}
 }
 
 void Movie::updateMovie(int &GraphHandle)

@@ -6,19 +6,25 @@
 
 //Network.hを参照してください
 
-Network::Network(Player *_player, NetworkPlayer *_networkplayer)
+Network::Network(Player *_player, NetworkPlayer *_networkplayer, ObjectManager *_objectmanager)
 {
 	player = _player;
 	networkplayer = _networkplayer;
+	objectmanager = _objectmanager;
 }
 
 void Network::crypto()
 {
-	sendData_async((char)std::bitset<7>(b_initcrypto).to_ulong(), "");
-
 	sendRsaPublicKey();
 
 	receiveAESKey();
+}
+
+void Network::login()
+{
+	sendData_async('v', Ver);
+
+	crypto();
 }
 
 void Network::setup(std::string &PlayerHandelName)
@@ -26,8 +32,6 @@ void Network::setup(std::string &PlayerHandelName)
 	std::string name(PlayerHandelName);
 
 	if (name.size() == 0)name = std::string("名無し");
-
-	crypto();
 
 	//送信
 	sendData_async((char)std::bitset<7>(b_sendHandelname).to_ulong(), name);
@@ -77,6 +81,15 @@ void Network::setup(std::string &PlayerHandelName)
 
 	//チャットの番号を取得
 	getChatNun();
+
+	size_t i = 0;
+	while(!finishobject)
+	{
+		downloadObject(i);
+		downloadObjectPosition(i);
+		downloadObjectCommand(i);
+		i++;
+	}
 }
 
 void Network::update()
@@ -87,18 +100,9 @@ void Network::update()
 	{
 		counter++;
 
-		if (counter == 140)
+		if (counter == 300)
 		{
-			sendPos();
-
-			//座標取得
-			for (int i = 0; i < connection; i++)
-			{
-				if (i != myconnection)
-				{
-					getPosition(i);
-				}
-			}
+			counter = 0;
 
 			checknewconection = 0;
 
@@ -108,8 +112,36 @@ void Network::update()
 		}
 		else
 		{
+			//座標の取得と送信
+			if (counter % 60 == 0)
+			{
+				sendPos();
+
+				//座標取得
+				for (int i = 0; i < connection; i++)
+				{
+					if (i != myconnection)
+					{
+						getPosition(i);
+					}
+				}
+
+				if (player->vehicle != 0)
+				{
+					uploadObjectPositon(player->vehicle-1);
+				}
+
+				for (int i = 0; i < objectmanager->carSize(); i++)
+				{
+					if (i != player->vehicle - 1)
+					{
+						downloadObjectPosition(i);
+					}
+				}
+			}
+
 			//ログアウト情報取得
-			if (candelete && counter > 80 && !checkdelete)
+			if (candelete && counter > 200 && !checkdelete)
 			{
 				deleting = 1;
 
@@ -128,13 +160,21 @@ void Network::update()
 			}
 
 			//チャットの更新
-			if (counter % 70 == 0)
+			if (counter % 90 == 0)
 			{
 				getChat();
+
+				for (int i = 0; i < connection; i++)
+				{
+					if (i != myconnection)
+					{
+						lookOwnership(i);
+					}
+				}
 			}
 
 			//新しい接続の確認
-			if (candelete == 1&& counter > 50 && !checknewconection)
+			if (candelete == 1&& counter > 100 && !checknewconection)
 			{
 				int c = connection;
 
@@ -176,6 +216,19 @@ void Network::update()
 						getCommand(i);
 					}
 				}
+
+				if (player->vehicle != 0)
+				{
+					uploadObjectCommand(player->vehicle-1);
+				}
+
+				for (int i = 0; i < objectmanager->carSize(); i++)
+				{
+					if (i != player->vehicle-1)
+					{
+						downloadObjectCommand(i);
+					}
+				}
 			}
 
 			//コマンド送信
@@ -187,7 +240,7 @@ void Network::update()
 			}
 
 			//youtubeの動画リクエストを確認
-			if (counter == 120 && canupdateyotube==0)
+			if (counter == 280 && canupdateyotube==0)
 			{
 				getYotubeRequest("g");
 
@@ -559,6 +612,131 @@ void Network::receive_end(const boost::system::error_code& error)
 						}
 					}
 				}
+
+				//オブジェクト
+				if (bit == std::bitset<7>(b_object))
+				{
+					std::string buf[7];
+
+					if (str.find('\t', 0) != std::string::npos)
+					{
+						int start = 1;
+						int i = 0;
+						while (str.find('\t', start) != std::string::npos)
+						{
+							int f = str.find('\t', start);
+							std::string nstr = str.substr(start, f - start);
+
+							buf[i] = nstr;
+
+							start = f + 1;
+
+							i++;
+						}
+
+						//最後の値
+						std::string nstr = str.substr(start, str.size() - start);
+						buf[3] = nstr;
+
+						if (str.find("-1") == std::string::npos)
+						{
+							objectmanager->addObject(std::stoi(buf[0].c_str()), VGet((float)std::atof(buf[1].c_str()), (float)std::atof(buf[2].c_str()), (float)std::atof(buf[3].c_str())));
+						}
+						else
+						{
+							finishobject = 1;
+						}
+					}
+					else
+					{
+						finishobject = 1;
+					}
+				}
+
+				if (bit == std::bitset<7>(b_objectPosition))
+				{
+					std::string buf[8];
+
+					if (str.find('\t', 0) != std::string::npos)
+					{
+						int start = 1;
+						int i = 0;
+						while (str.find('\t', start) != std::string::npos)
+						{
+							int f = str.find('\t', start);
+							std::string nstr = str.substr(start, f - start);
+
+							buf[i] = nstr;
+
+							start = f + 1;
+
+							i++;
+						}
+
+						//最後の値
+						std::string nstr = str.substr(start, str.size() - start);
+						buf[7] = nstr;
+
+						if (buf[0] != "-1")
+						{
+							objectmanager->setPosition(std::stoi(buf[0].c_str()), 
+								VGet((float)std::atof(buf[1].c_str()), (float)std::atof(buf[2].c_str()) + 10.f, (float)std::atof(buf[3].c_str())),
+								btQuaternion((float)std::atof(buf[4].c_str()), (float)std::atof(buf[5].c_str()), (float)std::atof(buf[6].c_str()), (float)std::atof(buf[7].c_str()))
+								);
+						}
+
+					}
+				}
+
+				if (bit == std::bitset<7>(b_objectCommand))
+				{
+					std::string buf[8];
+
+					if (str.find('\t', 0) != std::string::npos)
+					{
+						int start = 1;
+						int i = 0;
+						while (str.find('\t', start) != std::string::npos)
+						{
+							int f = str.find('\t', start);
+							std::string nstr = str.substr(start, f - start);
+
+							buf[i] = nstr;
+
+							start = f + 1;
+
+							i++;
+						}
+
+						//最後の値
+						std::string nstr = str.substr(start, str.size() - start);
+						buf[3] = nstr;
+
+						if (buf[0] != "-1")
+						{
+							objectmanager->drive((float)std::stoi(buf[0].c_str()), (float)std::atof(buf[1].c_str()), (float)std::atof(buf[2].c_str()), (float)std::atof(buf[3].c_str()));
+						}
+					}
+				}
+
+				if (bit == std::bitset<7>(b_objectGetOwnership))
+				{
+					std::string anstr = str.substr(1, str.find('\t'));
+
+					std::string nnstr = str.substr(str.find('\t') + 1, str.length());
+
+					objectmanager->setOwnership(std::stoi(nnstr), std::stoi(anstr));
+				}
+
+				if (bit == std::bitset<7>(b_lookOwnership))
+				{
+					std::string nstr = str.substr(1, str.length());
+
+					networkplayer->Ownership[orderlookOwnership[0]] = std::stoi(nstr);
+
+					orderlookOwnership.erase(orderlookOwnership.begin());
+				}
+
 			}
 			else
 			{
@@ -634,14 +812,25 @@ void Network::sendPos()
 		btQuaternion q = player->getRotBullet();
 		VECTOR p = player->getPosBullet();
 
+		std::string posx = std::to_string(p.x);
+		std::string posy = std::to_string(p.y);
+		std::string posz = std::to_string(p.z);
+
+		std::string rotx = std::to_string(q.getX());
+		std::string roty = std::to_string(q.getY());
+		std::string rotz = std::to_string(q.getZ());
+		std::string rotw = std::to_string(q.getW());
+		
 		std::string os;
-		os << std::to_string(p.x     ) << '\t';
-		os << std::to_string(p.y     ) << '\t';
-		os << std::to_string(p.z     ) << '\t';
-		os << std::to_string(q.getX()) << '\t';
-		os << std::to_string(q.getY()) << '\t';
-		os << std::to_string(q.getZ()) << '\t';
-		os << std::to_string(q.getW()) ;
+		//小数点第１位まで
+		os << posx.substr(0, posx.find('.') + 2) << '\t';
+		os << posy.substr(0, posy.find('.') + 2) << '\t';
+		os << posz.substr(0, posz.find('.') + 2) << '\t';
+		//小数点第４位まで
+		os << rotx.substr(0, rotx.find('.') + 5) << '\t';
+		os << roty.substr(0, roty.find('.') + 5) << '\t';
+		os << rotz.substr(0, rotz.find('.') + 5) << '\t';
+		os << rotw.substr(0, rotw.find('.') + 5);
 
 		sendData_async((char)bit.to_ulong(),os);
 
@@ -828,6 +1017,115 @@ void Network::getYotubeRequest(std::string command)
 	sendData_async((char)bit.to_ulong(), command);
 
 	if (command != "a" && command != "f")reserveData_async();
+}
+
+void Network::downloadObject(size_t objectNunber)
+{
+	std::bitset<7> bit(b_object);
+
+	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
+
+	reserveData_async();
+}
+
+void Network::downloadObjectPosition(size_t objectNunber)
+{
+	std::bitset<7> bit(b_objectPosition);
+
+	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
+
+	reserveData_async();
+}
+
+void Network::downloadObjectCommand(size_t objectNunber)
+{
+	std::bitset<7> bit(b_objectCommand);
+
+	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
+
+	reserveData_async();
+}
+
+void Network::uploadObjectPositon(size_t objectNunber)
+{
+	std::bitset<7> bit(b_upObjectPosition);
+
+	btQuaternion q = objectmanager->getCarRot(objectNunber);
+	VECTOR p = objectmanager->getCarPos(objectNunber);
+
+	std::string posx = std::to_string(p.x);
+	std::string posy = std::to_string(p.y);
+	std::string posz = std::to_string(p.z);
+
+	std::string rotx = std::to_string(q.getX());
+	std::string roty = std::to_string(q.getY());
+	std::string rotz = std::to_string(q.getZ());
+	std::string rotw = std::to_string(q.getW());
+
+	std::string os;
+	//小数点第0位まで
+	os << std::to_string(objectNunber) << '\t';;
+	os << posx.substr(0, posx.find('.') +2) << '\t';
+	os << posy.substr(0, posy.find('.') +2) << '\t';
+	os << posz.substr(0, posz.find('.') +2) << '\t';
+	//小数点第４位まで
+	os << rotx.substr(0, rotx.find('.') + 5) << '\t';
+	os << roty.substr(0, roty.find('.') + 5) << '\t';
+	os << rotz.substr(0, rotz.find('.') + 5) << '\t';
+	os << rotw.substr(0, rotw.find('.') + 5);
+
+	sendData_async((char)bit.to_ulong(), os);
+}
+
+void Network::uploadObjectCommand(size_t objectNunber)
+{
+	std::bitset<7> bit(b_upObjectCommand);
+
+	VECTOR p = objectmanager->getCarCommand(objectNunber);
+
+	std::string posx = std::to_string(p.x);
+	std::string posy = std::to_string(p.y);
+	std::string posz = std::to_string(p.z);
+
+	std::string os;
+	//小数点第0位まで
+	os << std::to_string(objectNunber) << '\t';
+	os << posx.substr(0, posx.find('.')) << '\t';
+	os << posy.substr(0, posy.find('.')) << '\t';
+	os << posz.substr(0, posz.find('.') + 5) << '\t';
+
+	sendData_async((char)bit.to_ulong(), os);
+}
+
+void Network::getOwnership(size_t objectNunber)
+{
+	objectmanager->setOwnership(objectNunber, 2);
+
+	std::bitset<7> bit(b_objectGetOwnership);
+
+	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
+
+	reserveData_async();
+}
+
+void Network::downOwnership(size_t objectNunber)
+{
+	std::bitset<7> bit(b_objecoutOwnership);
+
+	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
+
+	objectmanager->setOwnership(objectNunber,0);
+}
+
+void Network::lookOwnership(size_t objectNunber)
+{
+	orderlookOwnership.push_back(objectNunber);
+
+	std::bitset<7> bit(b_lookOwnership);
+
+	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
+
+	reserveData_async();
 }
 
 int Network::getCounter()

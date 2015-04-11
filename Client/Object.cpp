@@ -1,5 +1,9 @@
 #include "Object.h"
 
+Object::Object()
+{
+
+}
 
 void Object::copyModel(int copyNum)
 {
@@ -46,4 +50,13 @@ void Object::draw()
 	{
 		MV1DrawModel(modelhandles[i]);
 	}
+}
+
+// -- class ObjectManager --
+
+ObjectManager::ObjectManager(Bullet_physics *_bullet, int _world)
+{
+	bullet = _bullet;
+
+	world = _world;
 }

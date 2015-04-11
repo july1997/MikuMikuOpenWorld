@@ -24,6 +24,8 @@ bool Scene::Login()
 	ui->activateInputBox(input);
 
 	int ok = ui->makeButton("OK", font);
+	int offline = ui->makeButton("オフライン", font);
+	bool setNetwork = 0;
 
 	FpsManager fps;
 	int sc = 0, e = 0; bool inputend = 0; std::string inp; int error = 0;
@@ -57,6 +59,7 @@ bool Scene::Login()
 		ui->drawInputBoxToBox(box, input2, 20, 130, boxfont, 128);
 
 		ui->drawButtonToBox(box, ok, 200, 230, 72);
+		ui->drawButtonToBox(box, offline, 310, 260, 72);
 
 		if (ui->updateInputBox(input, inp) && inputend == 0)
 		{
@@ -86,6 +89,14 @@ bool Scene::Login()
 			}
 		}
 
+		if (ui->updateButton(offline) == 1)
+		{
+			network->useNetwork = 0;
+			setNetwork = 1;
+		}
+		if (setNetwork == 1)break;
+
+
 		if (error == 1)ui->drawStringToBox(box, "ホスト名が間違っています", 40, 20+ui->getBoxHeight(input)+20, font, 0, GetColor(237, 28, 36));
 		if (error == 2)ui->drawStringToBox(box, "IPアドレスが間違っています", 40, 110 + ui->getBoxHeight(input2)+20, font, 0, GetColor(237, 28, 36));
 
@@ -100,66 +111,77 @@ bool Scene::Login()
 		fps.controlFps();
 	}
 
-	ui->deleteBox(input);
-	ui->deleteBox(input2);
-
-	int input3 = ui->makeInputBox(360, 30, 16);
-	ui->activateInputBox(input3);
-
-	e = -90; int b = LoadBlendGraph("Picture/b.png"); std::string n; inputend = 0;
-	while (ProcessMessage() == 0 && exitConfirm() == 0)
+	if (setNetwork != 1)
 	{
-		ui->drawBackground("design/Image Background.png");
+		ui->deleteBox(input);
+		ui->deleteBox(input2);
 
-		ui->drawString(640 - 640 * sin(DX_PI_F / 180 * e) * 2, 100, "名前の入力", bigfont, 1);
+		network->login();
 
-		ui->drawBox(440 - 640 * sin(DX_PI_F / 180 * e) * 2, 200, box, 128);
+		int input3 = ui->makeInputBox(360, 30, 16);
+		ui->activateInputBox(input3);
 
-		ui->drawStringToBox(box, "名前（全角8文字まで,入力無しも可能)", 20, 30, boxfont);
-		ui->drawInputBoxToBox(box, input3, 20, 50, boxfont, 128);
-
-		ui->drawButtonToBox(box, ok, 200, 250, 72);
-
-		if (e < 0)
+		e = -90; int b = LoadBlendGraph("Picture/b.png"); std::string n; inputend = 0;
+		while (ProcessMessage() == 0 && exitConfirm() == 0)
 		{
-			e++;
+			ui->drawBackground("design/Image Background.png");
+
+			ui->drawString(640 - 640 * sin(DX_PI_F / 180 * e) * 2, 100, "名前の入力", bigfont, 1);
+
+			ui->drawBox(440 - 640 * sin(DX_PI_F / 180 * e) * 2, 200, box, 128);
+
+			ui->drawStringToBox(box, "名前（全角8文字まで,入力無しも可能)", 20, 30, boxfont);
+			ui->drawInputBoxToBox(box, input3, 20, 50, boxfont, 128);
+
+			ui->drawButtonToBox(box, ok, 200, 250, 72);
+
+			if (e < 0)
+			{
+				e++;
+			}
+
+			if (ui->updateInputBox(input3, n) == 1 && inputend == 0)
+			{
+				inputend = 1;
+			}
+
+			if (ui->updateButton(ok) == 1 && inputend == 0)
+			{
+				n = std::string(ui->getInputString(ui->getNowActiveKey()));
+				inputend = 1;
+			}
+
+			if (inputend)
+			{
+				e++;
+				if (e == 90)break;
+
+				SetDrawBlendMode(DX_BLENDMODE_ALPHA, e * 3);
+				DrawGraph(0, 0, b, FALSE);
+				SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
+			}
+
+			fps.displayFps(1260, 0);
+
+			fps.controlFps();
 		}
 
-		if (ui->updateInputBox(input3, n) == 1 && inputend == 0)
-		{
-			inputend = 1;
-		}
+		ui->deleteBox(ok);
+		ui->deleteBox(input3);
+		ui->deleteBox(box);
 
-		if (ui->updateButton(ok) == 1 && inputend == 0)
-		{
-			n = std::string(ui->getInputString(ui->getNowActiveKey()));
-			inputend = 1;
-		}
+		ClearDrawScreen();
+		ui->drawString(640, 300, "Now Loading...", boxfont, 1);
+		ScreenFlip();
 
-		if (inputend)
-		{
-			e++;
-			if (e == 90)break;
-
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, e * 3);
-			DrawGraph(0, 0, b, FALSE);
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-		}
-
-		fps.displayFps(1260, 0);
-
-		fps.controlFps();
+		network->setup(n);
 	}
-
-	ui->deleteBox(ok);
-	ui->deleteBox(input3);
-	ui->deleteBox(box);
-
-	ClearDrawScreen();
-	ui->drawString(640, 300, "Now Loading...", boxfont, 1);
-	ScreenFlip();
-
-	network->setup(n);
+	else
+	{
+		ClearDrawScreen();
+		ui->drawString(640, 300, "Now Loading...", boxfont, 1);
+		ScreenFlip();
+	}
 
 	return 0;
 }
@@ -239,7 +261,7 @@ void Scene::displayName()
 		{
 			std::string name;
 
-			VECTOR pos = network->getChara(name,i);
+			VECTOR pos = network->getChara(name, i);
 
 			ui->drawString((int)pos.x, (int)pos.y, name, font, 1);
 		}
@@ -305,6 +327,7 @@ void Scene::displayChatToScreen()
 
 							ui->drawButton(hukidasi[i], pos.x - GetDrawFormatStringWidthToHandle(ui->getFont(font), name.c_str()) / 2
 								- GetDrawFormatStringWidthToHandle(ui->getFont(font), mess.c_str()) / 2, pos.y - 25, 128);
+							
 						}
 
 						if (sowtime[i] != 150)sowtime[i]++;

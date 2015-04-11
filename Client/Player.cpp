@@ -310,3 +310,8 @@ std::string Player::getModelFileName()
 {
 	return modelname;
 }
+
+void Player::setPosBullet(VECTOR pos)
+{
+	bullet->getbtGhostObject(caharacter)->setWorldTransform(btTransform(bullet->getbtGhostObject(caharacter)->getWorldTransform().getRotation(), btVector3(pos.x, pos.y, pos.z)));
+}

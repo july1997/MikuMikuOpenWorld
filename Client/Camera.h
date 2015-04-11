@@ -21,5 +21,9 @@ class Camera
 
 public:
 	void MouseCamera(VECTOR camerapos,VECTOR addVce=VGet(0,0,0));
+
+	void CameraAdditionally(VECTOR pos, VECTOR rot);
+
+	void setCamera(VECTOR camerapos, VECTOR addVce = VGet(0, 0, 0));
 };
 

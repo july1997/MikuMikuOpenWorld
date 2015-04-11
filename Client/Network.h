@@ -15,15 +15,20 @@
 #include "NetworkPlayer.h"
 #include "Fps.h"
 #include "Crypto.h"
+#include "Object.h"
 
 namespace asio = boost::asio;
 namespace ip = asio::ip;
 
+#define Ver "0010"
+
 class Network : public Crypto
 {
 public:
-	Network(Player *_player, NetworkPlayer *_networkplayer);
+	Network(Player *_player, NetworkPlayer *_networkplayer, ObjectManager *_objectmanager);
 	
+	void login();
+
 	void crypto();
 
 	void setup(std::string &PlayerHandelName);
@@ -104,10 +109,25 @@ public:
 
 	std::vector<int> MessegeOrigin;
 
+	bool useNetwork = 1;
+
+	ObjectManager *objectmanager;
+	void downloadObject(size_t objectNunber);
+	void downloadObjectPosition(size_t objectNunber);
+	void downloadObjectCommand(size_t objectNunber);
+	void uploadObjectPositon(size_t objectNunber);
+	void uploadObjectCommand(size_t objectNunber);
+	void getOwnership(size_t objectNunber);
+	void downOwnership(size_t objectNunber);
+	void lookOwnership(size_t objectNunber);
+	std::vector<int> orderlookOwnership;
+	bool finishobject = 0;
+
 	//識別コード(ASCIIコード)
 	//文字列場合は逆から読む
 	//使用不能 \n"0001010" (区切り文字), \t"0001001"(区切り文字)
 	//左から1で始まるビットは使用不可
+	//32～63
 	const char* b_sendCommand		="1000000";
 	const char* b_sendPos			="0100000";
 	const char* b_close				="0100001";
@@ -126,9 +146,16 @@ public:
 	const char* b_getLogoutNun		="0101111";
 	const char* b_sendyotubeRequest	="0110000";
 	const char* b_getyotubeRequest	="0110001";
-	const char* b_initcrypto		="0111110";
+	const char* b_checVer			="0110010";
+	const char* b_object			="0110011";
+	const char* b_objectPosition	="0110100";
+	const char* b_objectCommand		="0110101";
+	const char* b_upObjectPosition	="0110110";
+	const char* b_upObjectCommand	="0110111";
+	const char* b_objectGetOwnership="0111000";
+	const char* b_objecoutOwnership ="0111001";
+	const char* b_lookOwnership		="0111010";
 	const char* b_crypto			="0111111";
-
 private:
 
 	asio::streambuf send_buffer;

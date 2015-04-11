@@ -4,6 +4,7 @@
 #include "Bullet_physics.h"
 
 #include <vector>
+#include <mutex>
 
 class NetworkPlayer : public Model
 {
@@ -27,11 +28,15 @@ class NetworkPlayer : public Model
 
 	std::vector<int> deleteplayernunber;
 
+	std::mutex mtx;
+
 public:
 	std::vector<bool> brendflag;
 	std::vector<int> nowanimeindex;
 
 	int myconnection = 0;
+
+	std::vector<bool> Ownership;
 
 	NetworkPlayer(Bullet_physics *bullet_, int world_);
 
@@ -39,7 +44,7 @@ public:
 	virtual void setModel(int &ModelHandel);
 
 
-	void networkSetCommand(int playernun, int commandnun, bool _command);
+	void networkSetCommand(size_t playernun, int commandnun, bool _command);
 
 	void networkSetPosRot(int playernun, VECTOR _pos, btQuaternion &_rot);
 
