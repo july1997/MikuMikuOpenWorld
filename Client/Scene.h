@@ -1,61 +1,53 @@
 #pragma once
 
-#include <vector>
-#include "Network.h"
-#include "UI.h"
+#include "NetworkManager.h"
+
+#include "DxLib.h"
+
+#include "UI/UI.h"
+#include "Common/Fps.h"
+
+#include <regex>
 
 class Scene
 {
-	UI *ui;
-	Network *network;
-	
-	int font, bigfont;
-
-	bool EndFlag = 0;
-
-	std::string messe;
-	int chatbox, chatinputbox, sousin;
-	bool showchat = 0, inp = 0,inputi=0;
-	std::vector<std::string> chatmessege;
-	size_t chatmessegesize = 0; bool follow = 0;
-
-
-	bool yotubeboxinit = 0,yinp=0; std::string youtubeinm;
-	int yotubebox,yotubeinput,yotubebottun;
-	std::vector<std::string> youtubemessege;
-	bool yfollow = 0; bool Question = 0;
-	int Questionyes = 0, Questionno=0;
-	bool questionnaire = 0, yetq=0;
-	int qtime = 1;
-	time_t RequestTime = 0;
-	//アンケートの収集している間（秒)(t_limitenquetegettime*回数 -t_substartenquettime)
-	const int t_substartenquettime = 60;
-	//アンケートを収集を終了する時間（秒）サーバー側と合わせてくだしあ
-	const int t_limitenquetegettime = 300;
-
-	size_t displaytedsize = 0;
-	std::vector<int> hukidasi, playernunbermessege, sowtime;
-	int showmessegenun = 0;
-
 public:
-	Scene(Network *network_);
-	~Scene(){ delete ui; }
+	Scene(std::shared_ptr<NetworkManager> network_);
+	~Scene();
 
-	bool Login();
+	bool login();
 
-	//終了確認する
-	bool exitConfirm();
+	bool chat();
 
-	void displayMyName();
-	void displayName();
+	void drawName();
 
-	void displayChat();
-	bool inputting();
+	void tutorial();
 
-	void displayChatToScreen();
+	void loading();
 
-	void yotubeRequest();
-	void yotubeQuestionnaire(bool Enquete = 1);
+private:
 
+	bool connect();
+
+	int regist(std::string mail, std::string pass);
+
+	bool illegalChara(std::string str);
+	bool Specialsymbol(std::string str);
+	bool Invalidname(std::string str);
+
+	UI ui;
+	int font, font2, font3;
+
+	FpsManager fps;
+
+	std::shared_ptr<NetworkManager> network;
+
+	std::vector<std::string> chatmessege;
+	int chatbox, chatinputbox, sousin;
+	bool load = 0, inp = 0,  follow = 0;
+	string messe;
+
+	bool tutorialf = 0, tutoriall = 0;
+	int tutorialbox;
 };
 

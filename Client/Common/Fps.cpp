@@ -1,8 +1,6 @@
 #include "fps.h"
 #include "DxLib.h"
 
-//Fps.hÇéQè∆ÇµÇƒÇ≠ÇæÇ≥Ç¢
-
 
 FpsManager::FpsManager()
 {
@@ -68,6 +66,23 @@ void FpsManager::controlClearDrawScreenFps()
 	t = mCount * 1000 / FPS - (GetNowCount() - mStartTime);
 
 	WaitTimer(t);
+}
+
+void FpsManager::measureFps()
+{
+	if (mCount == 0) {
+		mStartTime = GetNowCount();
+	}
+	if (mCount == FPS) {
+		mFps = 1000.f / ((GetNowCount() - mStartTime) / (float)FPS);
+		mStartTime = GetNowCount();
+		mCount = 0;
+	}
+	mCount++;
+
+	ScreenFlip();
+
+	ClearDrawScreen();
 }
 
 int FpsManager::getWaitTime()

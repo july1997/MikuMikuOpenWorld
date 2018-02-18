@@ -10,7 +10,7 @@ private:
 		mCount = 0,
 		FPS = 60,
 		t = 0;
-	float mFps=0;
+	float mFps= 0.0f;
 
 public:
 	//コンストラクタ
@@ -38,6 +38,9 @@ public:
 
 	//フレームレートを制御し、画面をフリップし、裏画面を初期化します。
 	void controlClearDrawScreenFps();
+
+	//フレームレートを計測
+	void measureFps();
 
 	int getWaitTime();
 };

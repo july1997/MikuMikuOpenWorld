@@ -1,85 +1,66 @@
-#include "Core.h"
+ï»¿#include "Core.h"
+#include "DxLib.h"
 
-//Core.h‚ðŽQÆ‚µ‚Ä‚­‚¾‚³‚¢
+
 Core::Core()
 {
+
 }
 
 
 Core::~Core()
 {
+
 }
 
-int Core::setupDxLib()
+
+size_t Core::setup()
 {
-	SetGraphMode(readFileSearchToWord_int("Setting.ini", "SCREEN_SIZE_X "),
-		readFileSearchToWord_int("Setting.ini", "SCREEN_SIZE_Y "), 32);
+	//ç”»é¢ãƒ¢ãƒ¼ãƒ‰
+	SetGraphMode(1280, 720, 32);
+	ChangeWindowMode(1);
+	SetMainWindowText("MikuMikuOpenWorld");//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ¢ãƒ¼ãƒ‰
 
-	ChangeWindowMode(readFileSearchToWord_int("Setting.ini", "FULL_SCREEN "));
-	SetMainWindowText("Project Agg");//ƒEƒBƒ“ƒhƒEƒ‚[ƒh
+	//ã€€ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ãƒ¢ãƒ¼ãƒ‰ã®æ™‚ã«ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã®ã‚µã‚¤ã‚ºã‚’è‡ªç”±ã«å¤‰æ›´å‡ºæ¥ã‚‹ã‚ˆã†ã«è¨­å®šã™ã‚‹
+	SetWindowSizeChangeEnableFlag(TRUE);
 
-	SetMultiThreadFlag(TRUE);// ƒ}ƒ‹ƒ`ƒXƒŒƒbƒh‚É“K‚µ‚½ƒ‚[ƒh‚Å‹N“®‚·‚é
+	SetMultiThreadFlag(TRUE);// ãƒžãƒ«ãƒã‚¹ãƒ¬ãƒƒãƒ‰ã«é©ã—ãŸãƒ¢ãƒ¼ãƒ‰ã§èµ·å‹•ã™ã‚‹
 
-	SetAlwaysRunFlag(TRUE);//‚’¼“¯Šú‚ð‘Ò‚½‚È‚¢
+	// DirectX11ã‚’ä½¿ç”¨ã™ã‚‹ã€‚
+	SetUseDirect3DVersion(DX_DIRECT3D_11);
+
+	//Zãƒãƒƒãƒ•ã‚¡ã®æ·±åº¦
+	SetZBufferBitDepth(24);
+
+	//TCPã§é€ä¿¡ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã®å…ˆé ­ã«ï¼”ãƒã‚¤ãƒˆä»˜ã‘ãªã„
+	SetUseDXNetWorkProtocol(FALSE);
+
+	SetAlwaysRunFlag(TRUE);//ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ãŒã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã§ã¯ãªã„çŠ¶æ…‹ã§ã‚‚å‡¦ç†ã‚’ç¶šè¡Œã™ã‚‹
+	//SetWaitVSyncFlag(FALSE);//åž‚ç›´åŒæœŸã‚’å¾…ãŸãªã„
+
+	//å¤šé‡èµ·å‹•
+	SetDoubleStartValidFlag(TRUE);
+
+	//UTF8
+	SetUseCharCodeFormat(DX_CHARCODEFORMAT_UTF8);
+
 	if (DxLib_Init() == -1)return -1;
 
-	SetWindowUserCloseEnableFlag(FALSE);//•Â‚¶‚éƒ{ƒ^ƒ“‚ð‰Ÿ‚µ‚Ä‚à•Â‚¶‚È‚¢
+	//SetWindowUserCloseEnableFlag(FALSE);//é–‰ã˜ã‚‹ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ã¦ã‚‚é–‰ã˜ãªã„
 
-	SetMouseDispFlag(TRUE);//ƒ}ƒEƒXƒJ[ƒ\ƒ‹‚ð•\Ž¦
+	SetMouseDispFlag(TRUE);//ãƒžã‚¦ã‚¹ã‚«ãƒ¼ã‚½ãƒ«ã‚’è¡¨ç¤º
 
-	SetDrawScreen(DX_SCREEN_BACK);//— ‰æ–Ê‚É•`‰æÝ’è
+	SetDrawScreen(DX_SCREEN_BACK);//è£ç”»é¢ã«æç”»è¨­å®š
+
+	// ãƒ•ãƒ«ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã®åˆ‡ã‚Šæ›¿ãˆã§ãƒªã‚½ãƒ¼ã‚¹ãŒæ¶ˆãˆã‚‹ã®ã‚’é˜²ãã€‚
+	SetChangeScreenModeGraphicsSystemResetFlag(FALSE);
+
+	// Zãƒãƒƒãƒ•ã‚¡ã‚’æœ‰åŠ¹ã«ã™ã‚‹ã€‚
+	SetUseZBuffer3D(TRUE);
+
+	// Zãƒãƒƒãƒ•ã‚¡ã¸ã®æ›¸ãè¾¼ã¿ã‚’æœ‰åŠ¹ã«ã™ã‚‹ã€‚
+	SetWriteZBuffer3D(TRUE);
+
 
 	return 0;
-}
-
-int Core::readFileSearchToWord_int(char *file, char *word)
-{
-	std::ifstream ifs(file);
-	std::string str;
-	if (ifs.fail())
-	{
-		return -1;
-	}
-	while (getline(ifs, str))//ˆês“Ç‚Ýo‚·
-	{
-		unsigned int loc = str.find(word, 0);
-
-		if (loc != string::npos)
-		{
-			string Search = string(word);
-			string scw = str.substr(Search.size(), str.size());
-
-			return std::stoi(scw);
-		}
-	}
-	return -1;
-}
-
-void Core::loadloop(Fps_ptr& Fps)
-{
-	int font = CreateFontToHandle("‚l‚r ƒSƒVƒbƒN", 15, 4, DX_FONTTYPE_ANTIALIASING_8X8);
-	int loadinig = LoadGraph("Picture/load.png");
-	int looptime = 0, looptime2 = 0;
-
-	while (ProcessMessage() == 0 && GetASyncLoadNum() != 0)
-	{
-		//ŠO•”ƒfƒoƒbƒJ‘Îô@ŒöŠJ‚·‚é‚Æ‚«‚ÉƒRƒƒ“ƒg‚ðŠO‚·
-		//if(IsDebuggerPresent()!=0)return 0;
-
-		//SetDrawBlendMode(DX_BLENDMODE_ALPHA, 145);
-		DrawRotaGraph2(640, 380, 40, 40, 1.0, DX_PI / 180 * 30 * looptime, loadinig, FALSE);
-		//SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-
-		looptime2++;
-		if (looptime2 == 6)looptime++, looptime2 = 0;
-		if (looptime == 12)looptime = 0;
-
-		DrawStringToHandle(640 - GetDrawFormatStringWidthToHandle(font, "‚È‚¤ƒ[ƒfƒBƒ“ƒO") / 2, 440, "‚È‚¤ƒ[ƒfƒBƒ“ƒO", GetColor(255, 255, 255), font);
-
-		DrawFormatStringToHandle(640 - GetDrawFormatStringWidthToHandle(font, "2/2") / 2, 460, -1, font, "%d/3", GetASyncLoadNum());
-
-		Fps->displayFps(1280 - 20, 0);
-
-		Fps->controlFps();
-	}
 }

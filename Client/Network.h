@@ -1,201 +1,103 @@
-#pragma once
-//
-//’ÊM‚Í•K‚¸ˆê•û’Ês
-//ƒNƒ‰ƒCƒAƒ“ƒg‚©‚çƒT[ƒo[‚É—v‹‚·‚é!
-//
-//•K‚¸Dxlib‚æ‚èæ‚ÉboostŒn‚Ìinclude‚ğ‚µ‚Ä‚­‚¾‚³‚¢
-#include <boost/asio.hpp>
-#include <boost/thread.hpp>
+ï»¿#pragma once
 
+#include "DxLib.h"
+#include "Common/fps.h"
+
+
+#pragma comment( lib, "cryptlib.lib" )
+#include <aes.h>
+#include <dh.h>
+#include <modes.h>
+#include <osrng.h>
+#include <rsa.h>
+#include <randpool.h>
+#include <hex.h>
+#include <osrng.h>
+#include <base64.h>
+#include <files.h>
+#include <pssr.h>
+#include <random>
+#include <bitset>
 
 #include <string>
+using namespace std;
 #include <vector>
+#include <thread>
 
-#include "Player.h"
-#include "NetworkPlayer.h"
-#include "Fps.h"
-#include "Crypto.h"
-#include "Object.h"
 
-namespace asio = boost::asio;
-namespace ip = asio::ip;
-
-#define Ver "0010"
-
-class Network : public Crypto
+class Network
 {
+	int nethandle;
+	int receiveLoop();
+
+	std::thread t;
+	std::vector<std::string> message;
+
+	int netudphandle, recivenetudphandle;
+	IPDATA UDPIP;
+
+	int UDP_receiveLoop();
+	std::thread u;
+	std::vector<std::string> command;
+
+	CryptoPP::CFB_Mode<CryptoPP::AES>::Encryption enc; //aes
+	CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption dec;
+	CryptoPP::RSA::PublicKey pubkey; //ras
+
+	std::string common_key_;
+	std::string common_key_iv_;
+
+	string name;
+	int id;
+
 public:
-	Network(Player *_player, NetworkPlayer *_networkplayer, ObjectManager *_objectmanager);
-	
-	void login();
+	Network();
+	~Network();
 
-	void crypto();
+	void setid(int id_);
+	void setname(string name_);
+	int getid();
+	string getname();
 
-	void setup(std::string &PlayerHandelName);
+	//--TCP--
+	int connect(std::string Ip);
 
-	void getLogout(int logoutinfo);
-	void getLogoutNun();
+	int send(char command, std::string method, std::string str, bool changeUTF8 = 1, bool base64encode = 1, bool useRSA = 0, bool useAES = 0);
 
-	//ƒJƒEƒ“ƒ^‚ğXV‚µ‚Ä’ÊM‚·‚é
-	void update();
+	int receive_start();
 
-	//“à•”ƒJƒEƒ“ƒ^‚Ì’l‚ğŠl“¾‚·‚é
-	int getCounter();
+	size_t getMassegeSize();
+	std::string getMassege();
 
-	//ƒRƒ}ƒ“ƒhiˆÚ“®•ûŒüj‚ğ‘—‚é
-	void sendCommand();
+	//--UDP--
+	int makeUDPSocket(std::string Ip);
 
-	//À•W‚ğ‘—‚é
-	void sendPos();
+	void sendUDP(char command, std::string method, string Buffer, bool base64encode = 1, bool useAES = 1);
 
-	//PlayerNunber‚ÌƒRƒ}ƒ“ƒh‚ğ“¾‚é
-	void getCommand(int PlayerNunber);
+	int UDP_receive_start();
 
-	void getPosition(int layerNunber);
+	size_t getCommandSize();
+	std::string getCommand();
 
-	void getConection();
+	//æš—å·åŒ–
+	int getRsaPublicKey(std::string publicKeystr);
+	std::string encryptByRsa(std::string str);
 
-	void getMyConection();
+	int makeAESKey();
+	void decryptionByAes(std::string &str);
+	void encryptByAes(std::string &str);
 
-	void getHandelName(int PlayerNunber);
+	std::string SHA256(string str);
 
-	void sendModelFileName(std::string FileName);
+	//ç½²åã¨åŒæ™‚ã«ãƒãƒ¼ã‚¸ãƒ§ãƒ³ç¢ºèª
+	string version = "Miku Miku Open World Ver0.0.1";
+	bool signature(string str);
 
-	void getModelFileName(int PlayerNunber);
+	//--å¤‰æ›ç³»--
+	std::string convertShiftJIS(const std::string srcUTF8);
+	std::string convertUTF8(std::string srcShiftJIS);
 
-	//ƒ`ƒƒƒbƒg‚Ì“ü—Í‚ğ‚·‚é –ß‚è’l 1:“ü—Í’† 0:Š®—¹
-	bool chat();
-	void inputChat(std::string String);
-
-	void getChatNun();
-
-	void getChat();
-
-	void MessegePush_back(std::string str);
-
-	//Ú‘±‚ğI—¹
-	void close();
-
-	VECTOR getMyChara(std::string &name);
-	VECTOR getChara(std::string &name, int PlayerNumber);
-	int getPlayerNun();
-	int getMycone();
-
-	void deletePlayer(int playernun);
-
-	size_t messege_Size();
-
-	std::string getMessege(int Number);
-
-	void sendYoutubeRequest(std::string VideoURL);
-	void getYotubeRequest(std::string command);
-	std::vector<std::string> YoutubeMessege;
-	std::string YoutubeURL;
-	time_t PlayStartTime;
-	bool canupdateyotube = 0;
-	int sendyotubecommand = 0;
-	int Extension=-1;//‰„’·‚·‚é‚©‚µ‚È‚¢‚©
-
-	int connection = 0;
-	int myconnection;
-	std::vector<std::string> HandelName;
-	std::vector<std::string> ModelFileName;
-
-	int havelogoutinfo = 0, haveconectinfo = 0;
-	bool logoutflag = 0;
-
-	bool candelete = 0;
-	bool deleting = 0;
-
-	std::vector<int> MessegeOrigin;
-
-	bool useNetwork = 1;
-
-	ObjectManager *objectmanager;
-	void downloadObject(size_t objectNunber);
-	void downloadObjectPosition(size_t objectNunber);
-	void downloadObjectCommand(size_t objectNunber);
-	void uploadObjectPositon(size_t objectNunber);
-	void uploadObjectCommand(size_t objectNunber);
-	void getOwnership(size_t objectNunber);
-	void downOwnership(size_t objectNunber);
-	void lookOwnership(size_t objectNunber);
-	std::vector<int> orderlookOwnership;
-	bool finishobject = 0;
-
-	//¯•ÊƒR[ƒh(ASCIIƒR[ƒh)
-	//•¶š—ñê‡‚Í‹t‚©‚ç“Ç‚Ş
-	//g—p•s”\ \n"0001010" (‹æØ‚è•¶š), \t"0001001"(‹æØ‚è•¶š)
-	//¶‚©‚ç1‚Ån‚Ü‚éƒrƒbƒg‚Íg—p•s‰Â
-	//32`63
-	const char* b_sendCommand		="1000000";
-	const char* b_sendPos			="0100000";
-	const char* b_close				="0100001";
-	const char* b_getCommand		="0100010";
-	const char* b_getPosition		="0100011";
-	const char* b_getConnection		="0100100";
-	const char* b_getmyconnection	="0100101";
-	const char* b_getHandelName		="0100110";
-	const char* b_getChat			="0100111";
-	const char* b_sendHandelname	="0101000";
-	const char* b_sendChat			="0101001";
-	const char* b_getChatNun		="0101010";
-	const char* b_sendModelFileName ="0101100";
-	const char* b_getModelFileName	="0101011";
-	const char* b_getLogout			="0101110";
-	const char* b_getLogoutNun		="0101111";
-	const char* b_sendyotubeRequest	="0110000";
-	const char* b_getyotubeRequest	="0110001";
-	const char* b_checVer			="0110010";
-	const char* b_object			="0110011";
-	const char* b_objectPosition	="0110100";
-	const char* b_objectCommand		="0110101";
-	const char* b_upObjectPosition	="0110110";
-	const char* b_upObjectCommand	="0110111";
-	const char* b_objectGetOwnership="0111000";
-	const char* b_objecoutOwnership ="0111001";
-	const char* b_lookOwnership		="0111010";
-	const char* b_crypto			="0111111";
-private:
-
-	asio::streambuf send_buffer;
-	asio::streambuf receive_buffer;
-
-	Player *player;
-	NetworkPlayer *networkplayer;
-
-	//”ñ“¯Šú‚Å‘—M‚·‚é
-	void sendData_async(char command, std::string str);
-	//”ñ“¯Šú‚ÅóM‚·‚é
-	void reserveData_async();
-	//ˆÃ†‰»‚µ‚Ä‘—M
-	void sendDataEncrypt_async(char command, std::string str);
-
-	void send_end(const boost::system::error_code& error);
-	void receive_end(const boost::system::error_code& error);
-
-	std::vector<int> ordercommandnun;
-	std::vector<int> orderposnun;
-
-	VECTOR oldpos;
-	btQuaternion oldrot;
-	int sendposnull = 0;
-	int sendcomnull = 0 ;
-
-	int counter = 0;
-
-	bool checkdelete = 0,checknewconection=0;
-
-	//ƒ`ƒƒƒbƒg—p‚ÌƒL[“ü—Í
-	int InputHandle;
-	bool chatflag = 0;
-
-	int haveMessege = 0;
-	std::vector<std::string> Messege;
-	size_t MessegeNunber = 0;
-
-	bool tell = 0;
-
-	bool comVECTOR(VECTOR v1, VECTOR v2);
-	bool comQuaternion(btQuaternion &v1, btQuaternion &v2);
+	//--ã‚³ãƒãƒ³ãƒ‰(1byte)--
+	unsigned const char comment = 1;
 };
+

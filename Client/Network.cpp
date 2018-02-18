@@ -1,1185 +1,447 @@
-#include "Network.h"
+ï»¿#include "Network.h"
 
-#include <bitset>
-
-#include "DxLib.h"
-
-//Network.h‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢
-
-Network::Network(Player *_player, NetworkPlayer *_networkplayer, ObjectManager *_objectmanager)
+Network::Network()
 {
-	player = _player;
-	networkplayer = _networkplayer;
-	objectmanager = _objectmanager;
 }
 
-void Network::crypto()
-{
-	sendRsaPublicKey();
 
-	receiveAESKey();
+Network::~Network()
+{
 }
 
-void Network::login()
+int Network::connect(std::string Ip)
 {
-	sendData_async('v', Ver);
+	IPDATA IP;
 
-	crypto();
-}
-
-void Network::setup(std::string &PlayerHandelName)
-{
-	std::string name(PlayerHandelName);
-
-	if (name.size() == 0)name = std::string("–¼–³‚µ");
-
-	//‘—M
-	sendData_async((char)std::bitset<7>(b_sendHandelname).to_ulong(), name);
-
-	//ƒ‚ƒfƒ‹ƒtƒ@ƒCƒ‹‚Ì–¼‘O‚ğ‘—M
-	sendModelFileName(player->getModelFileName());
-
-	//‘S‘Ì‚ÌÚ‘±”‚ğæ“¾
-	getConection();
-
-	//©•ª‚ÌÚ‘±”Ô†‚ğæ“¾
-	getMyConection();
-
-	//‘¼ƒvƒŒ[ƒ„[‚Ìî•ñ‚ğæ“¾
-	for (int i = 0; i < connection; i++)
-	{
-		if (i != myconnection)
+	for (int i = 0; i < 4; i++) {
+		switch (i)
 		{
-			getHandelName(i);
-
-			getModelFileName(i);
-		}
-		else
-		{
-			//©•ª‚Ì–¼‘O
-			HandelName.push_back(name);
-
-			//©•ª‚Ì“Ç‚İ‚ñ‚¾ƒ‚ƒfƒ‹ƒ@ƒCƒ‹–¼
-			ModelFileName.push_back(player->getModelFileName());
+		case 0:
+			IP.d1 = stoi(Ip.substr(0, Ip.find(".")));
+			Ip.erase(0, Ip.find(".") + 1);
+			break;
+		case 1:
+			IP.d2 = stoi(Ip.substr(0, Ip.find(".")));
+			Ip.erase(0, Ip.find(".") + 1);
+			break;
+		case 2:
+			IP.d3 = stoi(Ip.substr(0, Ip.find(".")));
+			Ip.erase(0, Ip.find(".") + 1);
+			break;
+		case 3:
+			IP.d4 = stoi(Ip.c_str());
+			break;
 		}
 	}
 
-	for (int i = 0; i < connection; i++)
-	{
-		if (i != myconnection)
-		{
-			networkplayer->addPlayer(ModelFileName[i].c_str());
-		}
-		else
-		{
-			networkplayer->myConnect();
-		}
-	}
+	nethandle = ConnectNetWork(IP, 13939);
 
-	//ƒƒOƒAƒEƒg‚Ì”Ô†æ“¾
-	getLogoutNun();
-
-	//ƒ`ƒƒƒbƒg‚Ì”Ô†‚ğæ“¾
-	getChatNun();
-
-	size_t i = 0;
-	while(!finishobject)
-	{
-		downloadObject(i);
-		downloadObjectPosition(i);
-		downloadObjectCommand(i);
-		i++;
-	}
+	return nethandle;
 }
 
-void Network::update()
+int Network::send(char command, std::string method, std::string str, bool changeUTF8,bool base64encode, bool useRSA, bool useAES)
 {
-	FpsManager Fps;
-	//60fps‚Å‚·
-	while (socket.is_open())
-	{
-		counter++;
+	char end = 0;
+	string strs = str;
 
-		if (counter == 300)
-		{
-			counter = 0;
+	//if (changeUTF8)strs = convertUTF8(strs);
 
-			checknewconection = 0;
+	if (useRSA)strs = encryptByRsa(strs);
 
-			checkdelete = 0;
+	if (useAES)encryptByAes(strs);
 
-			counter = 0;
-		}
-		else
-		{
-			//À•W‚Ìæ“¾‚Æ‘—M
-			if (counter % 60 == 0)
-			{
-				sendPos();
-
-				//À•Wæ“¾
-				for (int i = 0; i < connection; i++)
-				{
-					if (i != myconnection)
-					{
-						getPosition(i);
-					}
-				}
-
-				if (player->vehicle != 0)
-				{
-					uploadObjectPositon(player->vehicle-1);
-				}
-
-				for (int i = 0; i < objectmanager->carSize(); i++)
-				{
-					if (i != player->vehicle - 1)
-					{
-						downloadObjectPosition(i);
-					}
-				}
-			}
-
-			//ƒƒOƒAƒEƒgî•ñæ“¾
-			if (candelete && counter > 200 && !checkdelete)
-			{
-				deleting = 1;
-
-				logoutflag = 0;
-
-				getLogout(havelogoutinfo);
-
-				if (logoutflag)
-				{
-					getConection();
-				}
-
-				checkdelete = 1;
-
-				deleting = 0;
-			}
-
-			//ƒ`ƒƒƒbƒg‚ÌXV
-			if (counter % 90 == 0)
-			{
-				getChat();
-
-				for (int i = 0; i < connection; i++)
-				{
-					if (i != myconnection)
-					{
-						lookOwnership(i);
-					}
-				}
-			}
-
-			//V‚µ‚¢Ú‘±‚ÌŠm”F
-			if (candelete == 1&& counter > 100 && !checknewconection)
-			{
-				int c = connection;
-
-				getConection();
-
-				//V‚µ‚¢Ú‘±
-				if (connection > c)
-				{
-					deleting = 1;
-
-					for (int i = c; i < connection; i++)
-					{
-						if (i != myconnection)
-						{
-							getHandelName(i);
-
-							getModelFileName(i);
-
-							networkplayer->addPlayer(ModelFileName[i].c_str());
-
-							std::string m("‚ª“üº’†EEE");
-							MessegePush_back(HandelName[i] + m);
-						}
-					}
-
-					deleting = 0;
-				}
-
-				checknewconection = 1;
-			}
-
-			//ƒRƒ}ƒ“ƒhæ“¾
-			if (counter % 30 == 0 )
-			{
-				for (int i = 0; i < connection ; i++)
-				{
-					if (i != myconnection)
-					{
-						getCommand(i);
-					}
-				}
-
-				if (player->vehicle != 0)
-				{
-					uploadObjectCommand(player->vehicle-1);
-				}
-
-				for (int i = 0; i < objectmanager->carSize(); i++)
-				{
-					if (i != player->vehicle-1)
-					{
-						downloadObjectCommand(i);
-					}
-				}
-			}
-
-			//ƒRƒ}ƒ“ƒh‘—M
-			if (player->movestart && player->movecounter == 0)sendcomnull++;
-			else sendcomnull = 0;
-			if (sendcomnull < 3 )
-			{
-				sendCommand();
-			}
-
-			//youtube‚Ì“®‰æƒŠƒNƒGƒXƒg‚ğŠm”F
-			if (counter == 280 && canupdateyotube==0)
-			{
-				getYotubeRequest("g");
-
-				if (YoutubeURL.size() != 0)
-				{
-					getYotubeRequest("t");
-
-					canupdateyotube = 1;
-
-					Extension = -1;
-				}
-			}
-			if (sendyotubecommand != 0)
-			{
-				switch (sendyotubecommand)
-				{
-					//ƒAƒ“ƒP‘—M
-				case 1:
-					getYotubeRequest("a");
-					sendyotubecommand = 0;
-					break;
-					//ƒAƒ“ƒPŒ‹‰Ê‚ğæ“¾
-				case 2:
-					getYotubeRequest("b");
-					sendyotubecommand = 0;
-					break;
-					//Ä¶I—¹‚ğ’m‚ç‚¹‚é
-				case 3:
-					getYotubeRequest("f");
-					sendyotubecommand = 0;
-					canupdateyotube = 0;
-					break;
-				}
-			}
-		}
-
-		Fps.controlWaitFps();
-	}
-}
-
-void Network::sendData_async(char command, std::string str)
-{
-	io_service->reset();//reset‚ğ–Y‚ê‚Ä‚àÀs‚³‚ê‚È‚¢
-
-	std::string sendstr(command + str);
-
-	std::ostream os(&send_buffer);
-	os << sendstr << Delimiter;
-
-	asio::async_write(socket, send_buffer.data(), boost::bind(&Network::send_end, this, _1));
-
-	io_service->run();//run–Y‚ê‚é‚ÆÀs‚µ‚È‚¢
-}
-
-void Network::sendDataEncrypt_async(char command, std::string str)
-{
-	io_service->reset();
-
-	std::string sendstr(command + str);
-
-	std::string encstr = encryptByAes(sendstr);
-
-	while (encstr.find("EOS") != std::string::npos)
-	{
-		encstr = (sendstr);
-	}
-
-	std::ostream os(&send_buffer);
-	os << (char)std::bitset<7>(b_crypto).to_ulong() << encstr << Delimiter;
-
-	asio::async_write(socket, send_buffer.data(), boost::bind(&Network::send_end, this, _1));
-
-	io_service->run();
-}
-
-void Network::reserveData_async()
-{
-	io_service->reset();
-
-	asio::async_read_until(socket, receive_buffer, Delimiter, boost::bind(&Network::receive_end, this, _1));
-
-	io_service->run();
-}
-
-void Network::send_end(const boost::system::error_code& error)
-{
-	if (error) {
-		if (socket.is_open())
-		{
-			//‹­§Ø’f‚ª‚ ‚Á‚½ê‡
-			MessegePush_back(std::string("ƒT[ƒo[‚©‚çØ’f‚³‚ê‚Ü‚µ‚½"));
-
-			socket.close();
-		}
-	}
-	else
-	{
-		//printfDx("send : ");
-		//printfDx(asio::buffer_cast<const char*>(send_buffer.data()));
-		//printfDx("\n");
-
-		//‘—Mƒoƒbƒtƒ@‚ÌƒTƒCƒY•ªÁ”ï‚·‚é
-		send_buffer.consume(send_buffer.size());
-	}
-}
-
-void Network::receive_end(const boost::system::error_code& error)
-{
-	if (error) {
-		if (socket.is_open())
-		{
-			//‹­§Ø’f‚ª‚ ‚Á‚½ê‡
-			MessegePush_back(std::string("ƒT[ƒo[‚©‚çØ’f‚³‚ê‚Ü‚µ‚½"));
-
-			socket.close();
-		}
-	}
-	else
-	{
-		while (receive_buffer.size() != 0)
-		{
-			std::string buffer = std::string(boost::asio::buffer_cast<const char*>(receive_buffer.data()), receive_buffer.size());
-			auto length = buffer.find(Delimiter);
-
-			if (length != std::string::npos)
-			{
-				receive_buffer.consume(length + strlen(Delimiter));
-
-				std::string buff = buffer.substr(0, length);
-
-				// ”’l‚©‚çƒrƒbƒgW‡‚ğ¶¬‚·‚é
-				std::bitset<7> bit(buff[0]);
-
-				std::string str;
-
-				if (bit == std::bitset<7>(b_crypto))
-				{
-					buff.erase(buff.begin());
-
-					//ˆÃ†‚ğ‰ğ‚­
-					str = decryptionByAes(buff);
-
-					//ƒrƒbƒg‚ğXV
-					bit = std::bitset<7>(str[0]);
-				}
-				else
-				{
-					str = buff;
-				}
-
-				//printfDx("receive : ");
-				//printfDx(bit.to_string().c_str());
-				//printfDx(str.c_str());
-				//printfDx("\n");
-
-				//ƒRƒ}ƒ“ƒh
-				if (bit == std::bitset<7>(b_getCommand))
-				{
-					std::string nstr = str.substr(1, str.length());
-					std::bitset<7> bbit(nstr[0]);
-
-					networkplayer->networkSetCommand(ordercommandnun[0], 0, bbit[2]);
-					networkplayer->networkSetCommand(ordercommandnun[0], 1, bbit[1]);
-					networkplayer->networkSetCommand(ordercommandnun[0], 2, bbit[3]);
-					networkplayer->networkSetCommand(ordercommandnun[0], 3, bbit[4]);
-					networkplayer->networkSetCommand(ordercommandnun[0], 4, bbit[0]);
-					networkplayer->networkSetCommand(ordercommandnun[0], 5, bbit[5]);
-
-					//æ“ª‚ğíœ
-					ordercommandnun.erase(ordercommandnun.begin());
-				}
-
-				//À•W
-				if (bit == std::bitset<7>(b_getPosition))
-				{
-					std::string buf[7];
-
-					if (str.find('\t', 0) != std::string::npos)
-					{
-						int start = 1;
-						int i = 0;
-						while (str.find('\t', start) != std::string::npos)
-						{
-							int f = str.find('\t', start);
-							std::string nstr = str.substr(start, f - start);
-
-							buf[i] = nstr;
-
-							start = f + 1;
-
-							i++;
-						}
-
-						//ÅŒã‚Ì’l
-						std::string nstr = str.substr(start, str.size() - start);
-						buf[6] = nstr;
-
-						btQuaternion q = btQuaternion((float)std::atof(buf[3].c_str()), (float)std::atof(buf[4].c_str()), (float)std::atof(buf[5].c_str()), (float)std::atof(buf[6].c_str()));
-
-						networkplayer->networkSetPosRot(orderposnun[0], VGet((float)std::atof(buf[0].c_str()), (float)std::atof(buf[1].c_str()), (float)std::atof(buf[2].c_str())), q);
-
-						//æ“ª‚ğíœ
-						orderposnun.erase(orderposnun.begin());
-					}
-				}
-
-				if (bit == std::bitset<7>(b_getConnection))
-				{
-					//Ú‘±”
-					std::string nstr = str.substr(1, str.length());
-
-					connection = std::stoi(nstr);
-				}
-
-				if (bit == std::bitset<7>(b_getmyconnection))
-				{
-					//©•ª‚ÌÚ‘±”Ô†
-					std::string nstr = str.substr(1, str.length());
-
-					myconnection = std::stoi(nstr);
-
-					networkplayer->myconnection = std::stoi(nstr);
-				}
-
-				if (bit == std::bitset<7>(b_getHandelName))
-				{
-					//‘¼ƒvƒŒ[ƒ„[‚Ìƒnƒ“ƒhƒ‹ƒl[ƒ€
-					HandelName.push_back(str.substr(1, str.length()));
-				}
-
-				if (bit == std::bitset<7>(b_getModelFileName))
-				{
-					//‘¼ƒvƒŒ[ƒ„[‚Ìƒ‚ƒfƒ‹ƒtƒ@ƒCƒ‹ƒl[ƒ€
-					ModelFileName.push_back(str.substr(1, str.length()));
-				}
-
-				if (bit == std::bitset<7>(b_getLogout))
-				{
-					//ƒƒOƒAƒEƒgî•ñ
-					std::string nstr = str.substr(1, str.length());
-
-					if (std::stoi(nstr) < HandelName.size())
-					{
-						std::string m("‚ª‘Şº‚µ‚Ü‚µ‚½");
-						MessegePush_back(HandelName[std::stoi(nstr)] + m);
-
-						int logout = std::stoi(nstr);
-
-						networkplayer->deletePlayer(logout);
-
-						if (logout < myconnection)
-						{
-							myconnection--;
-
-							networkplayer->myconnection--;
-						}
-
-						deletePlayer(logout);
-
-						logoutflag = 1;
-					}
-				}
-
-				if (bit == std::bitset<7>(b_getLogoutNun))
-				{
-					//ƒƒOƒAƒEƒg”‚ğæ“¾
-					std::string nstr = str.substr(1, str.length());
-
-					havelogoutinfo = std::stoi(nstr);
-				}
-
-				//ƒ`ƒƒƒbƒgæ“¾
-				if (bit == std::bitset<7>(b_getChat))
-				{
-					MessegeOrigin.push_back(std::stoi(str.substr(1, str.find('\t'))));
-
-					Messege.push_back(str.substr(str.find('\t')+1, str.length()));
-
-					MessegeNunber++;
-
-					//ƒƒbƒZ[ƒW‚ª50ˆÈã‚É‚È‚Á‚½‚çæ“ª‚ğÁ‚·
-					if (Messege.size() > 50)
-					{
-						for (size_t i = 50; i < Messege.size(); i++)
-						{
-							Messege.erase(Messege.begin());
-
-							MessegeOrigin.erase(MessegeOrigin.begin());
-						}
-					}
-				}
-
-				//ƒ`ƒƒƒbƒg”Ô†æ“¾
-				if (bit == std::bitset<7>(b_getChatNun))
-				{
-					std::string nstr = str.substr(1, str.length());
-
-					haveMessege = std::stoi(nstr);
-				}
-
-				//yotube
-				if (bit == std::bitset<7>(b_getyotubeRequest))
-				{
-					std::string nstr = str.substr(1, 1);
-
-					if (nstr == "g")
-					{
-						if (str.substr(2, str.length() - 1) == "1")
-						{
-							if (!tell)
-							{
-								YoutubeMessege.push_back("“®‰æ‚ªÄ¶’†‚Å‚·Ÿ‚ÌÄ¶‚Ü‚Å‚¨‘Ò‚¿‚­‚¾‚³‚¢");
-								tell = 1;
-							}
-						}
-						else if (str.substr(2, str.length() - 1) != "0")
-						{
-							if (YoutubeURL != str.substr(2, str.length()))
-							{
-								YoutubeURL = str.substr(2, str.length());
-
-								YoutubeMessege.push_back(YoutubeURL + "‚ÌÄ¶‚ğ€”õ‚µ‚Ü‚·");
-
-								tell = 0;
-							}
-						}
-					}
-
-					if (nstr == "t")
-					{
-						PlayStartTime = std::stoi(str.substr(2, str.length()));
-
-						//“ú–{ŠÔ‚É•ÏŠ·
-						struct tm gmt;
-						errno_t err = localtime_s(&gmt, &PlayStartTime);
-
-						YoutubeMessege.push_back("Ä¶ŠJn F " + std::to_string(gmt.tm_hour) + " : " + std::to_string(gmt.tm_min) + " . " + std::to_string(gmt.tm_sec));
-					}
-
-					if (nstr == "b")
-					{
-						std::string res = str.substr(2, 1);
-
-						if (std::stoi(res) != 2)
-						{
-							std::string pas = str.substr(3, str.length());
-							int k = std::stoi(pas) - 100;
-
-							if (std::stoi(res) == 1)
-							{
-								Extension = 1;
-
-								YoutubeMessege.push_back("”½‘Î : " + pas + "^¬ : " + std::to_string(-k));
-
-								YoutubeMessege.push_back(" “®‰æ‚ÌÄ¶‚ğ‰„’·‚µ‚Ü‚·");
-							}
-							if (std::stoi(res) == 0)
-							{
-								Extension = 0;
-
-								YoutubeMessege.push_back("”½‘Î : " + pas + "^¬ : " + std::to_string(-k));
-
-								YoutubeMessege.push_back(" “®‰æ‚ÌÄ¶‚ğI—¹‚µ‚Ü‚·");
-							}
-						}
-						else
-						{
-							Extension = -1;
-						}
-					}
-				}
-
-				//ƒIƒuƒWƒFƒNƒg
-				if (bit == std::bitset<7>(b_object))
-				{
-					std::string buf[7];
-
-					if (str.find('\t', 0) != std::string::npos)
-					{
-						int start = 1;
-						int i = 0;
-						while (str.find('\t', start) != std::string::npos)
-						{
-							int f = str.find('\t', start);
-							std::string nstr = str.substr(start, f - start);
-
-							buf[i] = nstr;
-
-							start = f + 1;
-
-							i++;
-						}
-
-						//ÅŒã‚Ì’l
-						std::string nstr = str.substr(start, str.size() - start);
-						buf[3] = nstr;
-
-						if (str.find("-1") == std::string::npos)
-						{
-							objectmanager->addObject(std::stoi(buf[0].c_str()), VGet((float)std::atof(buf[1].c_str()), (float)std::atof(buf[2].c_str()), (float)std::atof(buf[3].c_str())));
-						}
-						else
-						{
-							finishobject = 1;
-						}
-					}
-					else
-					{
-						finishobject = 1;
-					}
-				}
-
-				if (bit == std::bitset<7>(b_objectPosition))
-				{
-					std::string buf[8];
-
-					if (str.find('\t', 0) != std::string::npos)
-					{
-						int start = 1;
-						int i = 0;
-						while (str.find('\t', start) != std::string::npos)
-						{
-							int f = str.find('\t', start);
-							std::string nstr = str.substr(start, f - start);
-
-							buf[i] = nstr;
-
-							start = f + 1;
-
-							i++;
-						}
-
-						//ÅŒã‚Ì’l
-						std::string nstr = str.substr(start, str.size() - start);
-						buf[7] = nstr;
-
-						if (buf[0] != "-1")
-						{
-							objectmanager->setPosition(std::stoi(buf[0].c_str()), 
-								VGet((float)std::atof(buf[1].c_str()), (float)std::atof(buf[2].c_str()) + 10.f, (float)std::atof(buf[3].c_str())),
-								btQuaternion((float)std::atof(buf[4].c_str()), (float)std::atof(buf[5].c_str()), (float)std::atof(buf[6].c_str()), (float)std::atof(buf[7].c_str()))
-								);
-						}
-
-					}
-				}
-
-				if (bit == std::bitset<7>(b_objectCommand))
-				{
-					std::string buf[8];
-
-					if (str.find('\t', 0) != std::string::npos)
-					{
-						int start = 1;
-						int i = 0;
-						while (str.find('\t', start) != std::string::npos)
-						{
-							int f = str.find('\t', start);
-							std::string nstr = str.substr(start, f - start);
-
-							buf[i] = nstr;
-
-							start = f + 1;
-
-							i++;
-						}
-
-						//ÅŒã‚Ì’l
-						std::string nstr = str.substr(start, str.size() - start);
-						buf[3] = nstr;
-
-						if (buf[0] != "-1")
-						{
-							objectmanager->drive((float)std::stoi(buf[0].c_str()), (float)std::atof(buf[1].c_str()), (float)std::atof(buf[2].c_str()), (float)std::atof(buf[3].c_str()));
-						}
-					}
-				}
-
-				if (bit == std::bitset<7>(b_objectGetOwnership))
-				{
-					std::string anstr = str.substr(1, str.find('\t'));
-
-					std::string nnstr = str.substr(str.find('\t') + 1, str.length());
-
-					objectmanager->setOwnership(std::stoi(nnstr), std::stoi(anstr));
-				}
-
-				if (bit == std::bitset<7>(b_lookOwnership))
-				{
-					std::string nstr = str.substr(1, str.length());
-
-					networkplayer->Ownership[orderlookOwnership[0]] = std::stoi(nstr);
-
-					orderlookOwnership.erase(orderlookOwnership.begin());
-				}
-
-			}
-			else
-			{
-				receive_buffer.consume(receive_buffer.size());
-			}
-		}
-	}
-}
-
-void Network::close()
-{
-	//Ø’fƒRƒ}ƒ“ƒh
-	std::bitset<7> bit(b_close);
-
-	//‘—M
-	sendData_async((char)bit.to_ulong(),"");
-
-	io_service->post([this]() { socket.close(); });
-}
-
-void Network::getLogout(int logoutinfo)
-{
-	std::bitset<7> bit(b_getLogout);
-
-	sendData_async(char(bit.to_ulong()), std::to_string(logoutinfo));
-
-	reserveData_async();
-}
-
-void Network::getLogoutNun()
-{
-	std::bitset<7> bit(b_getLogoutNun);
-
-	sendData_async(char(bit.to_ulong()), "");
-
-	reserveData_async();
-}
-
-void Network::sendCommand()
-{
-	std::bitset<7> bit(b_sendCommand);
-	bit[0] = player->jump;
-	bit[1] = player->right;
-	bit[2] = player->left;
-	bit[3] = player->backward;
-	bit[4] = player->forward;
-	bit[5] = player->run;
-
-	sendData_async((char)bit.to_ulong(),"");
-}
-
-bool Network::comVECTOR(VECTOR v1, VECTOR v2)
-{
-	if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z)return 1;
-	else return 0;
-}
-
-bool Network::comQuaternion(btQuaternion &v1, btQuaternion &v2)
-{
-	if (v1.getX() == v2.getX() && v1.getY() == v2.getY() && v1.getZ() == v2.getZ() && v1.getW() == v2.getW())return 1;
-	else return 0;
-}
-
-void Network::sendPos()
-{
-	if (comVECTOR(oldpos, player->getPosBullet()) && comQuaternion(oldrot, player->getRotBullet()))sendposnull++;
-	else sendposnull = 0;
-
-	if (sendposnull < 3)
-	{
-		std::bitset<7> bit(b_sendPos);
-
-		btQuaternion q = player->getRotBullet();
-		VECTOR p = player->getPosBullet();
-
-		std::string posx = std::to_string(p.x);
-		std::string posy = std::to_string(p.y);
-		std::string posz = std::to_string(p.z);
-
-		std::string rotx = std::to_string(q.getX());
-		std::string roty = std::to_string(q.getY());
-		std::string rotz = std::to_string(q.getZ());
-		std::string rotw = std::to_string(q.getW());
-		
-		std::string os;
-		//¬”“_‘æ‚PˆÊ‚Ü‚Å
-		os << posx.substr(0, posx.find('.') + 2) << '\t';
-		os << posy.substr(0, posy.find('.') + 2) << '\t';
-		os << posz.substr(0, posz.find('.') + 2) << '\t';
-		//¬”“_‘æ‚SˆÊ‚Ü‚Å
-		os << rotx.substr(0, rotx.find('.') + 5) << '\t';
-		os << roty.substr(0, roty.find('.') + 5) << '\t';
-		os << rotz.substr(0, rotz.find('.') + 5) << '\t';
-		os << rotw.substr(0, rotw.find('.') + 5);
-
-		sendData_async((char)bit.to_ulong(),os);
-
-		oldpos = player->getPosBullet();
-		oldrot = player->getRotBullet();
-	}
-}
-
-void Network::getCommand(int PlayerNunber)
-{
-	ordercommandnun.push_back(PlayerNunber);
-
-	std::bitset<7> bit(b_getCommand);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(PlayerNunber));
-
-	reserveData_async();
-}
-
-void Network::getPosition(int PlayerNunber)
-{
-	orderposnun.push_back(PlayerNunber);
-
-	std::bitset<7> bit(b_getPosition);
-
-	sendData_async((char)bit.to_ulong(),std::to_string(PlayerNunber));
-
-	reserveData_async();
-}
-
-void Network::getConection()
-{
-	std::bitset<7> bit(b_getConnection);
-
-	sendData_async(char(bit.to_ulong()),"");
-
-	reserveData_async();
-}
-
-void Network::getMyConection()
-{
-	std::bitset<7> bit(b_getmyconnection);
-
-	sendData_async((char)bit.to_ulong(),"");
-
-	reserveData_async();
-}
-
-void Network::getHandelName(int PlayerNunber)
-{
-	std::bitset<7> bit(b_getHandelName);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(PlayerNunber));
-
-	reserveData_async();
-}
-
-void Network::sendModelFileName(std::string FileName)
-{
-	std::bitset<7> bit(b_sendModelFileName);
-
-	sendData_async((char)bit.to_ulong(), FileName);
-}
-
-void Network::getModelFileName(int PlayerNunber)
-{
-	std::bitset<7> bit(b_getModelFileName);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(PlayerNunber));
-
-	reserveData_async();
-}
-
-bool Network::chat()
-{
-	if (chatflag == 0)
-	{
-		// ƒL[“ü—Íƒnƒ“ƒhƒ‹‚ğì‚é(ƒLƒƒƒ“ƒZƒ‹‚È‚µ‘SŠp•¶š—L‚è”’l“ü—Í‚¶‚á‚È‚µ)
-		InputHandle = MakeKeyInput(100, FALSE, FALSE, FALSE);
-
-		// ì¬‚µ‚½ƒL[“ü—Íƒnƒ“ƒhƒ‹‚ğƒAƒNƒeƒBƒu‚É‚·‚é
-		SetActiveKeyInput(InputHandle);
-
-		chatflag = 1;
-	}
-
-	// “ü—Íƒ‚[ƒh‚ğ•`‰æ
-	DrawKeyInputModeString(0, 0);
-
-	// “ü—Í“r’†‚Ì•¶š—ñ‚ğ•`‰æ
-	DrawKeyInputString(0, 0, InputHandle);
-
-	// “ü—Í‚ªI—¹‚µ‚Ä‚¢‚éê‡
-	if (CheckKeyInput(InputHandle) != 0)
-	{
-		char String[256];
-
-		// “ü—Í‚³‚ê‚½•¶š—ñ‚ğæ“¾
-		GetKeyInputString(String, InputHandle);
-		
-		std::string str(String);
-
-		if (str.size() != 0)
-		{
-			std::bitset<7> bit(b_sendChat);
-
-			//‘—M
-			sendDataEncrypt_async((char)bit.to_ulong(), std::string(String));
-		}
-
-		// —pÏ‚İ‚ÌƒCƒ“ƒvƒbƒgƒnƒ“ƒhƒ‹‚ğíœ‚·‚é
-		DeleteKeyInput(InputHandle);
-
-		chatflag = 0;
-
-		getChat();
-	}
-
-	return chatflag;
-}
-
-void Network::inputChat(std::string String)
-{
-	std::string str(String);
-
-	if (str.size() != 0)
-	{
-		std::bitset<7> bit(b_sendChat);
-
-		//‘—M
-		sendDataEncrypt_async((char)bit.to_ulong(), std::string(String));
-	}
-}
-
-void Network::MessegePush_back(std::string str)
-{
-	MessegeOrigin.push_back(-1);
-
-	Messege.push_back(str);
-
-	MessegeNunber++;
-
-	//ƒƒbƒZ[ƒW‚ª50ˆÈã‚É‚È‚Á‚½‚çæ“ª‚ğÁ‚·
-	if (Messege.size() > 50)
-	{
-		for (size_t i = 50; i < Messege.size(); i++)
-		{
-			Messege.erase(Messege.begin());
-		}
-	}
-}
-
-void Network::getChat()
-{
-	std::bitset<7> bit(b_getChat);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(haveMessege));
-
-	reserveData_async();
-}
-
-void Network::getChatNun()
-{
-	std::bitset<7> bit(b_getChatNun);
-
-	sendData_async((char)bit.to_ulong(),"");
-
-	reserveData_async();
-}
-
-void Network::sendYoutubeRequest(std::string VideoURL)
-{
-	YoutubeMessege.push_back(VideoURL + "‚ğƒŠƒNƒGƒXƒg‚µ‚Ü‚µ‚½");
-
-	std::bitset<7> bit(b_sendyotubeRequest);
-
-	sendData_async((char)bit.to_ulong(), VideoURL);
-}
-
-void Network::getYotubeRequest(std::string command)
-{
-	std::bitset<7> bit(b_getyotubeRequest);
-
-	sendData_async((char)bit.to_ulong(), command);
-
-	if (command != "a" && command != "f")reserveData_async();
-}
-
-void Network::downloadObject(size_t objectNunber)
-{
-	std::bitset<7> bit(b_object);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
-
-	reserveData_async();
-}
-
-void Network::downloadObjectPosition(size_t objectNunber)
-{
-	std::bitset<7> bit(b_objectPosition);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
-
-	reserveData_async();
-}
-
-void Network::downloadObjectCommand(size_t objectNunber)
-{
-	std::bitset<7> bit(b_objectCommand);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
-
-	reserveData_async();
-}
-
-void Network::uploadObjectPositon(size_t objectNunber)
-{
-	std::bitset<7> bit(b_upObjectPosition);
-
-	btQuaternion q = objectmanager->getCarRot(objectNunber);
-	VECTOR p = objectmanager->getCarPos(objectNunber);
-
-	std::string posx = std::to_string(p.x);
-	std::string posy = std::to_string(p.y);
-	std::string posz = std::to_string(p.z);
-
-	std::string rotx = std::to_string(q.getX());
-	std::string roty = std::to_string(q.getY());
-	std::string rotz = std::to_string(q.getZ());
-	std::string rotw = std::to_string(q.getW());
-
-	std::string os;
-	//¬”“_‘æ0ˆÊ‚Ü‚Å
-	os << std::to_string(objectNunber) << '\t';;
-	os << posx.substr(0, posx.find('.') +2) << '\t';
-	os << posy.substr(0, posy.find('.') +2) << '\t';
-	os << posz.substr(0, posz.find('.') +2) << '\t';
-	//¬”“_‘æ‚SˆÊ‚Ü‚Å
-	os << rotx.substr(0, rotx.find('.') + 5) << '\t';
-	os << roty.substr(0, roty.find('.') + 5) << '\t';
-	os << rotz.substr(0, rotz.find('.') + 5) << '\t';
-	os << rotw.substr(0, rotw.find('.') + 5);
-
-	sendData_async((char)bit.to_ulong(), os);
-}
-
-void Network::uploadObjectCommand(size_t objectNunber)
-{
-	std::bitset<7> bit(b_upObjectCommand);
-
-	VECTOR p = objectmanager->getCarCommand(objectNunber);
-
-	std::string posx = std::to_string(p.x);
-	std::string posy = std::to_string(p.y);
-	std::string posz = std::to_string(p.z);
-
-	std::string os;
-	//¬”“_‘æ0ˆÊ‚Ü‚Å
-	os << std::to_string(objectNunber) << '\t';
-	os << posx.substr(0, posx.find('.')) << '\t';
-	os << posy.substr(0, posy.find('.')) << '\t';
-	os << posz.substr(0, posz.find('.') + 5) << '\t';
-
-	sendData_async((char)bit.to_ulong(), os);
-}
-
-void Network::getOwnership(size_t objectNunber)
-{
-	objectmanager->setOwnership(objectNunber, 2);
-
-	std::bitset<7> bit(b_objectGetOwnership);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
-
-	reserveData_async();
-}
-
-void Network::downOwnership(size_t objectNunber)
-{
-	std::bitset<7> bit(b_objecoutOwnership);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
-
-	objectmanager->setOwnership(objectNunber,0);
-}
-
-void Network::lookOwnership(size_t objectNunber)
-{
-	orderlookOwnership.push_back(objectNunber);
-
-	std::bitset<7> bit(b_lookOwnership);
-
-	sendData_async((char)bit.to_ulong(), std::to_string(objectNunber));
-
-	reserveData_async();
-}
-
-int Network::getCounter()
-{
-	return counter;
-}
-
-size_t Network::messege_Size()
-{
-	return MessegeNunber;
-}
-
-std::string Network::getMessege(int Number)
-{
-	return Messege[Number];
-}
-
-VECTOR Network::getMyChara(std::string &name)
-{
-	//ƒXƒNƒŠ[ƒ“À•W‚É•ÏŠ·
-	VECTOR anhead = ConvWorldPosToScreenPos(VGet(player->getPos().x, player->getPos().y + 22.f, player->getPos().z));
-
-	name = HandelName[myconnection];
-
-	return anhead;
-}
-
-int Network::getPlayerNun()
-{
-	return networkplayer->getModelHandlesSize();
-}
-
-int Network::getMycone()
-{
-	return myconnection;
-}
-
-VECTOR Network::getChara(std::string &name, int PlayerNumber)
-{
-	//ƒXƒNƒŠ[ƒ“À•W‚É•ÏŠ·
-	VECTOR anhead = ConvWorldPosToScreenPos(VGet(networkplayer->networkGetPos(PlayerNumber).x, networkplayer->networkGetPos(PlayerNumber).y + 22.f, networkplayer->networkGetPos(PlayerNumber).z));
+	string strn = string(command + method + " " + strs);
 	
-	name = HandelName[PlayerNumber];
+	//base64encod
+	string encoded;
+	CryptoPP::StringSource ss((const byte*)strn.data(), strn.size(), true,
+		new CryptoPP::Base64Encoder(
+			new CryptoPP::StringSink(encoded)
+		) // HexEncoder
+	); // StringSource
+	encoded = encoded + end;
 
-	return anhead;
+	if (encoded.size() >= 512) {
+		NetWorkSend(nethandle, encoded.substr(0,512).c_str(), 512);
+		encoded.erase(0, 512);
+	}
+
+	return NetWorkSend(nethandle, encoded.c_str(), encoded.size());
 }
 
-void Network::deletePlayer(int playernun_)
-{
-	std::vector<std::string>::iterator stri = HandelName.begin();
-	stri += playernun_;
-	HandelName.erase(stri);
 
-	stri = ModelFileName.begin();
-	stri += playernun_;
-	ModelFileName.erase(stri);
+int Network::receive_start()
+{
+	t = std::thread(&Network::receiveLoop, this);
+	t.detach();
+
+	return 0;
+}
+
+int Network::receiveLoop()
+{
+	//åˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã§ç«‹ã¡ä¸Šã’
+
+	while (!ProcessMessage())
+	{
+		// åˆ‡æ–­ç¢ºèª
+		if (GetLostNetWork() == nethandle)
+		{
+			message.push_back("SYSTEM ã‚µãƒ¼ãƒãƒ¼ã‹ã‚‰åˆ‡æ–­ã•ã‚Œã¾ã—ãŸ");
+			break;
+		}
+
+		// å—ä¿¡ã—ãŸæ–‡å­—åˆ—ãŒã‚ã‚‹å ´åˆã¯å—ä¿¡ã™ã‚‹
+		if (GetNetWorkDataLength(nethandle) > 0)
+		{
+			char Message[2048], Message2[2048];
+			for (int i = 0; i < 2048; i++)
+			{
+				Message[i] = 0;
+				Message2[i] = 0;
+			}
+			NetWorkRecvToPeek(nethandle, Message, 2047);
+
+			std::string buf(Message);
+
+			// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å—ä¿¡
+			NetWorkRecv(nethandle, Message2, buf.size()+1);
+
+			std::string str(Message2);
+
+			string decoded;
+			CryptoPP::StringSource ssk(str, true /*pump all*/,
+				new CryptoPP::Base64Decoder(
+					new CryptoPP::StringSink(decoded)
+				) // HexDecoder
+			); // StringSource
+
+			if (str.size() > 1)
+			{
+				message.push_back(decoded);
+			}
+		}
+	}
+
+	return 0;
+}
+
+size_t Network::getMassegeSize()
+{
+	return message.size();
+}
+
+std::string Network::getMassege()
+{
+	string m = message[0];
+	message.erase(message.begin());
+
+	return m;
+}
+
+int Network::makeUDPSocket(std::string Ip)
+{
+	// ï¼µï¼¤ï¼°é€šä¿¡ç”¨ã®ã‚½ã‚±ãƒƒãƒˆãƒãƒ³ãƒ‰ãƒ«ã‚’ä½œæˆ
+	netudphandle = MakeUDPSocket(-1);
+
+	for (int i = 0; i < 4; i++) {
+		switch (i)
+		{
+		case 0:
+			UDPIP.d1 = stoi(Ip.substr(0, Ip.find(".")));
+			Ip.erase(0, Ip.find(".")+1);
+			break;
+		case 1:
+			UDPIP.d2 = stoi(Ip.substr(0, Ip.find(".")));
+			Ip.erase(0, Ip.find(".")+1);
+			break;
+		case 2:
+			UDPIP.d3 = stoi(Ip.substr(0, Ip.find(".")));
+			Ip.erase(0, Ip.find(".")+1);
+			break;
+		case 3:
+			UDPIP.d4 = stoi(Ip.c_str());
+			break;
+		}
+	}
+
+	return 0;
+}
+
+void Network::sendUDP(char command, std::string method, string Buffer, bool base64encode, bool useAES)
+{
+	char end = 0;
+	string strs = Buffer;
+
+	if (useAES)encryptByAes(strs);
+
+	string strn = string(command + method + " " + strs);
+	//base64encod
+	string encoded;
+	CryptoPP::StringSource ss((const byte*)strn.data(), strn.size(), true,
+		new CryptoPP::Base64Encoder(
+			new CryptoPP::StringSink(encoded)
+		) // HexEncoder
+	); // StringSource
+	encoded = encoded + end;
+
+	// æ–‡å­—åˆ—ã®é€ä¿¡
+	NetWorkSendUDP(netudphandle, UDPIP, 23939, encoded.c_str(), encoded.size());
+}
+
+int Network::UDP_receive_start()
+{
+	recivenetudphandle = MakeUDPSocket(23940);
+
+	u = std::thread(&Network::UDP_receiveLoop, this);
+	u.detach();
+
+	return 0;
+}
+
+int Network::UDP_receiveLoop()
+{
+	//åˆ¥ã‚¹ãƒ¬ãƒƒãƒ‰ã§ç«‹ã¡ä¸Šã’
+
+	while (!ProcessMessage())
+	{
+		if (CheckNetWorkRecvUDP(recivenetudphandle) == TRUE)
+		{
+			char StrBuf[256], StrBuf2[256];
+			for (int i = 0; i < 256; i++)
+			{
+				StrBuf[i] = 0;
+				StrBuf2[i] = 0;
+			}
+
+			NetWorkRecvUDP(recivenetudphandle, NULL, NULL, StrBuf, 256, TRUE);
+			std::string buf(StrBuf2);
+
+			// å—ä¿¡
+			NetWorkRecvUDP(recivenetudphandle, NULL, NULL, StrBuf, buf.size()+1, FALSE);
+
+			std::string str(StrBuf);
+
+			string decoded;
+			CryptoPP::StringSource ssk(str, true /*pump all*/,
+				new CryptoPP::Base64Decoder(
+					new CryptoPP::StringSink(decoded)
+				) // HexDecoder
+			); // StringSource
+			command.push_back(decoded);
+		}
+	}
+
+	return 0;
+}
+
+size_t Network::getCommandSize()
+{
+	return command.size();
+}
+
+std::string Network::getCommand()
+{
+	string m = command[0];
+	command.erase(command.begin());
+
+	return m;
+}
+
+int Network::getRsaPublicKey(std::string publicKeystr)
+{
+	try
+	{
+		// Use the array directly to avoid the copy
+		CryptoPP::ArraySource as(publicKeystr, true /*pumpAll*/);
+
+		// Use Load to BER decode the Subject Public Key Info (SPKI)
+		pubkey.Load(as);
+
+		// Validate it before using it
+		CryptoPP::AutoSeededRandomPool prng;
+		pubkey.ThrowIfInvalid(prng,1);
+	}
+	catch (CryptoPP::Exception const& e)
+	{
+		return -1;
+	}
+	catch (...)
+	{
+		return -1;
+	}
+
+	return 0;
+}
+
+bool Network::signature(string str)
+{
+	try
+	{
+		string recovered;
+
+		// Verify and Recover
+		CryptoPP::RSASS<CryptoPP::PSS, CryptoPP::SHA1>::Verifier verifier(pubkey);
+
+		CryptoPP::StringSource ss2(version + str, true,
+			new CryptoPP::SignatureVerificationFilter(
+				verifier,
+				new CryptoPP::StringSink(recovered),
+				CryptoPP::SignatureVerificationFilter::THROW_EXCEPTION |
+				CryptoPP::SignatureVerificationFilter::PUT_MESSAGE
+			) // SignatureVerificationFilter
+		); // StringSource
+
+
+		if(recovered == version)return 1;
+		else return 0;
+	}
+	catch (...)
+	{
+		return 0;
+	}
+}
+
+std::string Network::encryptByRsa(std::string str)
+{
+	CryptoPP::AutoSeededRandomPool rnd;
+
+	std::string cipher;
+	// Encryption
+	CryptoPP::RSAES_OAEP_SHA_Encryptor e(pubkey);
+
+	CryptoPP::StringSource ss1(str, true,
+		new CryptoPP::PK_EncryptorFilter(rnd, e,
+			new CryptoPP::StringSink(cipher)
+		) // PK_EncryptorFilter
+	); // StringSource
+
+	return cipher;
+}
+
+
+int Network::makeAESKey()
+{
+	byte key[CryptoPP::AES::DEFAULT_KEYLENGTH];
+	byte iv[CryptoPP::AES::BLOCKSIZE];
+
+	while (1) {
+
+		// å…±é€šéµã¨IVã‚’é©å½“ãªå€¤ã§åˆæœŸåŒ–
+		CryptoPP::AutoSeededRandomPool prng;
+		prng.GenerateBlock(key, sizeof(key));
+		prng.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE);
+
+		common_key_ = std::string((const char*)key, sizeof(key));
+		common_key_iv_ = std::string((const char*)iv, sizeof(iv));
+
+		if (common_key_.size() == 16 && common_key_iv_.size() == 16 &&
+			common_key_.find(" ") == std::string::npos && common_key_iv_.find(" ") == std::string::npos)break;
+	}
+
+	WaitTimer(1000);
+
+	send(2,"AES", common_key_ + " " + common_key_iv_,0,1,1);
+
+	enc.SetKeyWithIV(key, sizeof(key), iv);
+	dec.SetKeyWithIV(key, sizeof(key), iv);
+
+
+	return 0;
+}
+
+//æš—å·åŒ–
+void Network::encryptByAes(std::string &str)
+{
+	enc.ProcessData((byte*)str.data(), (byte*)str.data(), str.size());
+}
+
+//å¾©å·åŒ–
+void Network::decryptionByAes(std::string &str)
+{
+	dec.ProcessData((byte*)str.data(), (byte*)str.data(), str.size());
+}
+
+std::string Network::convertShiftJIS(const std::string srcUTF8)
+{
+	//Unicodeã¸å¤‰æ›å¾Œã®æ–‡å­—åˆ—é•·ã‚’å¾—ã‚‹
+	int lenghtUnicode = MultiByteToWideChar(CP_UTF8, 0, srcUTF8.c_str(), srcUTF8.size() + 1, NULL, 0);
+
+	//å¿…è¦ãªåˆ†ã ã‘Unicodeæ–‡å­—åˆ—ã®ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿
+	wchar_t* bufUnicode = new wchar_t[lenghtUnicode];
+
+	//UTF8ã‹ã‚‰Unicodeã¸å¤‰æ›
+	MultiByteToWideChar(CP_UTF8, 0, srcUTF8.c_str(), srcUTF8.size() + 1, bufUnicode, lenghtUnicode);
+
+	//ShiftJISã¸å¤‰æ›å¾Œã®æ–‡å­—åˆ—é•·ã‚’å¾—ã‚‹
+	int lengthSJis = WideCharToMultiByte(CP_THREAD_ACP, 0, bufUnicode, -1, NULL, 0, NULL, NULL);
+
+	//å¿…è¦ãªåˆ†ã ã‘ShiftJISæ–‡å­—åˆ—ã®ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿
+	char* bufShiftJis = new char[lengthSJis];
+
+	//Unicodeã‹ã‚‰ShiftJISã¸å¤‰æ›
+	WideCharToMultiByte(CP_THREAD_ACP, 0, bufUnicode, lenghtUnicode + 1, bufShiftJis, lengthSJis, NULL, NULL);
+
+	std::string strSJis(bufShiftJis);
+
+	delete bufUnicode;
+	delete bufShiftJis;
+
+	return strSJis;
+}
+
+std::string Network::convertUTF8(std::string srcShiftJIS)
+{
+	//Unicodeã¸å¤‰æ›å¾Œã®æ–‡å­—åˆ—é•·ã‚’å¾—ã‚‹
+	int lenghtUnicode = MultiByteToWideChar(CP_THREAD_ACP, 0, srcShiftJIS.c_str(), srcShiftJIS.size() + 1, NULL, 0);
+
+	//å¿…è¦ãªåˆ†ã ã‘Unicodeæ–‡å­—åˆ—ã®ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿
+	wchar_t* bufUnicode = new wchar_t[lenghtUnicode];
+
+	//ShiftJISã‹ã‚‰Unicodeã¸å¤‰æ›
+	MultiByteToWideChar(CP_THREAD_ACP, 0, srcShiftJIS.c_str(), srcShiftJIS.size() + 1, bufUnicode, lenghtUnicode);
+
+
+	//UTF8ã¸å¤‰æ›å¾Œã®æ–‡å­—åˆ—é•·ã‚’å¾—ã‚‹
+	int lengthUTF8 = WideCharToMultiByte(CP_UTF8, 0, bufUnicode, -1, NULL, 0, NULL, NULL);
+
+	//å¿…è¦ãªåˆ†ã ã‘UTF8æ–‡å­—åˆ—ã®ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿
+	char* bufUTF8 = new char[lengthUTF8];
+
+	//Unicodeã‹ã‚‰UTF8ã¸å¤‰æ›
+	WideCharToMultiByte(CP_UTF8, 0, bufUnicode, lenghtUnicode + 1, bufUTF8, lengthUTF8, NULL, NULL);
+
+	std::string strUTF8(bufUTF8);
+
+	delete bufUnicode;
+	delete bufUTF8;
+
+	return strUTF8;
+}
+
+std::string Network::SHA256(string str)
+{
+	CryptoPP::SHA256 hash;
+	string digest;
+
+	CryptoPP::StringSource s(str, true, new CryptoPP::HashFilter(hash, new CryptoPP::HexEncoder(new CryptoPP::StringSink(digest))));
+
+	return digest;
+}
+
+void Network::setid(int id_)
+{
+	id = id_;
+}
+void Network::setname(string name_)
+{
+	name = name_;
+}
+int Network::getid()
+{
+	return id;
+}
+string Network::getname()
+{
+	return name;
 }

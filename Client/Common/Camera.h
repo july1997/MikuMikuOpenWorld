@@ -19,11 +19,22 @@ class Camera
 	MATRIX RotV, RotH;
 	VECTOR CamPos = VGet(0.0f, 17.75f, CamR), FocusPos = VGet(0.0f, 17.5f, 0.0f);
 
-public:
-	void MouseCamera(VECTOR camerapos,VECTOR addVce=VGet(0,0,0));
+	bool cameraflag = 0;
 
-	void CameraAdditionally(VECTOR pos, VECTOR rot);
+	float oldcmerapos;
+
+public:
+	void MouseCamera(VECTOR camerapos, VECTOR viewpoint = VGet(0, 17.75f, 0),VECTOR addVce=VGet(0,0,0));
+
+	//ÇﬂÇËçûÇ‹Ç»Ç¢ÉJÉÅÉâÅH
+	void MouseCamera(int stagemodel , VECTOR camerapos, VECTOR addVce = VGet(0, 0, 0));
+
+	void CameraAdditionally(VECTOR pos, VECTOR rot, VECTOR addVce = VGet(0, 0, 0));
 
 	void setCamera(VECTOR camerapos, VECTOR addVce = VGet(0, 0, 0));
+
+	float getOldCameraPos();
+
+	VECTOR getPos();
 };
 

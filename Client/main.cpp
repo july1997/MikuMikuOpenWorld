@@ -1,372 +1,122 @@
-#include "Network.h"
-#include "Youtube.h"
+ï»¿#include "DxLib.h"
 
-#include "DxLib.h"
-
-#include "fps.h"
 #include "Core.h"
+#include "Common/Fps.h"
+#include "Common/Model.h"
+#include "Common/Camera.h"
 
-#include "Model.h"
 #include "Bullet_physics.h"
-#include "Player.h"
-#include "Camera.h"
-#include "Object.h"
-#include "NetworkPlayer.h"
+#include "_dxdebugdraw.h"
+#include "Youtube.h"
+#include "Effekseer.h"
+#include "NetworkManager.h"
 #include "Scene.h"
-#include "Car.h"
-#include "shadow.h"
+#include "Character.h"
+#include "Object.h"
 
-#include <thread>
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	Core core;
+	if (core.setup() == -1)return -1;
 
-	core.setupDxLib();
+	FpsManager fps;
+	Camera camera;
+	VECTOR vp = { 0,10,0 };
 
-	FpsManager Fps;
-	Fps.setFps(30);
+	std::shared_ptr<Bullet_physics> bullet(new Bullet_physics);
+	int world = bullet->createWorld(VGet(-0, -0, -0), VGet(10000.f, 10000.f, 10000.f));
 
-	Bullet_physics bullet;
-	int world = bullet.createWorld();
-
-	ObjectManager objectmanager(&bullet, world);
-
-	Player player(&bullet, world);
-	/*
-	switch (GetRand(12))
-	{
-	case 0:
-		player.loadModel("model/Tdaƒ~ƒN‚³‚ñ ƒLƒƒƒ~ƒƒ“ƒs/Tdaƒ~ƒN‚³‚ñ ƒLƒƒƒ~ƒƒ“ƒs.mv1");
-		break;
-	case 1:
-		player.loadModel("model/Tda®ƒ~ƒNƒƒ“ƒs[ƒX/Tda®ƒ~ƒNƒƒ“ƒs[ƒXRSP.mv1");
-		break;
-	case 2:
-		player.loadModel("model/Appearance Miku/Appearance Miku.mv1");
-		break;
-	case 3:
-		player.loadModel("model/‚ ‚Òƒ~ƒN‰ü•ÏƒTƒ“ƒ^•08/‚ ‚Òƒ~ƒNƒTƒ“ƒ^_ƒeƒXƒg08.mv1");
-		break;
-	case 4:
-		player.loadModel("model/á1_5/áVer1_5.mv1");
-		break;
-	case 5:
-		player.loadModel("model/39‚Æ‚ç‚Í‚º®‚İ‚­‚Q/39‚Æ‚ç‚Í‚º®‚İ‚­‚Q.mv1");
-		break;
-	case 6:
-		player.loadModel("model/Tda®d‰¹ƒeƒgTypeS/Tda®d‰¹ƒeƒgTypeS.mv1");
-		break;
-	case 7:
-		player.loadModel("model/ƒIƒIƒ}‚³‚ñ/ƒIƒIƒ}‚³‚ñ.mv1");
-		break;
-	case 8:
-		player.loadModel("model/ƒ‘ƒ”ƒ@‰†‹@/ƒ‘ƒ”ƒ@‰†‹@.mv1");
-		break;
-	case 9:
-		player.loadModel("model/‹à„1.5/‹à„.mv1");
-		break;
-	case 10:
-		player.loadModel("model/‰‰¹ƒ~ƒNXS‰ü•Ïá÷-1.1/mikuXS÷ƒ~ƒN.mv1");
-		break;
-	case 11:
-		player.loadModel("model/m_GUMI_V3_201306/GUMIƒÀ_V3.mv1");
-		break;
-	case 12:
-		player.loadModel("model/Luka_v3.3/„‰¹ƒ‹ƒJ.mv1");
-		break;
-	}
-	*/
-
-	player.loadModel("model/Tda®ƒ~ƒNƒƒ“ƒs[ƒX/Tda®ƒ~ƒNƒƒ“ƒs[ƒXRSP.mv1");
-
-	NetworkPlayer networkplayer(&bullet, world);
-
-	Network network(&player, &networkplayer, &objectmanager);
-	Scene scene(&network);
-	scene.Login();
-
-	while (ProcessMessage() == 0 && GetASyncLoadNum() != 0);
-	player.attachAnime(0);
+	//éåŒæœŸèª­ã¿è¾¼ã¿è¨­å®šã«å¤‰æ›´
+	SetUseASyncLoadFlag(TRUE);
 
 	Model stage;
-	stage.loadModel("stage/‹óF’¬1.52/sorairo1.52.mv1");
-	//stage.loadModel("stage/PQ_Remake_AKIHABARA/test.mv1");
-	//stage.setPos(VGet(-800, -36, -1800));
-	stage.setScale(10.0f);
+	stage.loadModel(u8"Stage/ç©ºè‰²ç”º1.52/sorairo1.52.mv1");
 
-	bullet.createGroundBodytoMesh(stage.getModelHandle(), world);
+	std::shared_ptr<Character> chara(new Character(bullet, world));
+	chara->loadModel(u8"Model/Tdaå¼åˆéŸ³ãƒŸã‚¯V4X_Ver1.00/Tdaå¼åˆéŸ³ãƒŸã‚¯V4X_Ver1.00/Tdaå¼åˆéŸ³ãƒŸã‚¯V4X.mv1");
 
 	Model sky;
-	sky.loadModel("stage/ƒXƒJƒCƒh[ƒ€/dome303.X");
-	//sky.setScale(1.5f);
-	sky.setScale(10.0f);
+	sky.loadModel(u8"Skybox/skydome/skybox.mqo");
+	
+	//è¨­å®šã‚’æˆ»ã™
+	SetUseASyncLoadFlag(FALSE);
 
-	Object object;
-	object.loadModel("stage/ƒXƒNƒŠ[ƒ“‚d‚w/ƒXƒNƒŠ[ƒ“EX2.mv1");
-	object.setScale(10.f);
-	//object.setPos(VGet( -50,-8, 30));
-	object.setRot(VGet(0, -DX_PI_F / 4, 0));
-	object.setPos(VGet(-220.11, 2, 1030));
 
-	Camera camera;
+	//int specCubeTex = LoadGraph(u8"Skybox/GrandCanyon/skybox_32.dds");
+	//SetUseTextureToShader(2, specCubeTex);
 
 	Youtube yotube;
-	int movieflag = 0;
-	yotube.setScreen(object.getModelHandle(), 3);
+	//while(yotube.downloadmovie("https://www.youtube.com/watch?v=wDVX2bEcJtk"))ProcessMessage();
+	//yotube.playMovie();
 
-	shadow Shadow;
+	//Effekseer_DX effect;
 
-	bool ank = 1;
 
-	bool vkey = 0;
+	std::shared_ptr<NetworkManager> network(new NetworkManager(bullet, world, chara));
 
-	for (size_t i = 0; i < networkplayer.getModelHandlesSize(); i++)
+	Scene scene(network);
+	if (scene.login())
 	{
-		if (i != network.myconnection)
+		scene.loading();
+
+		stage.setScale(10.f);
+		bullet->createGroundBodytoMesh(stage.getModelHandle(), world);
+
+		chara->setup();
+
+		sky.setScale(19.f);
+
+		while (ProcessMessage() == 0 && CheckHitKey(KEY_INPUT_ESCAPE) == 0)
 		{
-			networkplayer.attachAnime(i, 0);
+			camera.MouseCamera(stage.getModelHandle(), chara->getPos(), vp);
+			//camera.CameraAdditionally( chara.getPos(), chara.getRot(), vp);
+
+
+			//yotube.update();
+
+			chara->playAnime();
+
+			chara->animeControl();
+
+			bullet->stepSimulation(world);
+
+			chara->update();
+
+			network->multiplayerUpdate();
+
+			sky.setPos(chara->getPos());
+
+			// ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ã®è¨ˆç®—ã‚’ã—ãªã„ã‚ˆã†ã«è¨­å®šã‚’å¤‰æ›´
+			SetUseLighting(FALSE);
+
+			sky.draw();
+
+			SetUseLighting(TRUE);
+
+			stage.draw();
+
+			chara->draw();
+
+			network->multiplayerDraw();
+
+			//chara->debug();
+
+			scene.drawName();
+
+			scene.tutorial();
+
+			if (!scene.chat()) {
+				chara->playerMovementKeyboard();
+			}
+			else {
+				chara->noMovement();
+			}
+
+			fps.displayFps(1280 - 20, 0);
+			fps.measureFps();
 		}
 	}
-
-	std::thread t;
-	if(network.useNetwork == 1)t = std::thread([&network](){ network.update(); });
-
-	while (ProcessMessage() == 0 && scene.exitConfirm() == 0)
-	{
-		network.candelete = 0;
-
-		if (network.deleting == 1)
-		{
-			while (network.deleting == 1)
-			{
-				ProcessMessage();
-			}
-		}
-
-		SetCameraNearFar(3.0f, 10000.0f);
-
-		if (scene.inputting())player.playerMovementKeyboard();
-		else player.setPlayerMovement(0,0,0,0,0,0);
-
-		networkplayer.controlPlayer();
-
-		bullet.stepSimulation(world, 30.f);
-
-		player.update();
-
-		networkplayer.updatePlayerVec();
-
-		MV1PhysicsCalculation(player.getModelHandle(), 1000.0f / 30.0f);
-
-		player.playAnime();
-
-		if (!player.run   &&    player.nowanimeindex == 2 || player.nowanimeindex == 2 && player.brendflag && !player.run)player.switchAnime(1);
-		if (player.run   &&    player.nowanimeindex == 1 || player.nowanimeindex == 1 && player.brendflag && player.run == 1)player.switchAnime(2);
-		if ( player.moveflag && player.nowanimeindex == 0 || player.nowanimeindex == 0 && player.brendflag)player.switchAnime(1);
-		if (!player.moveflag && player.nowanimeindex != 0 || player.nowanimeindex !=0 && player.brendflag && player.run == 0)player.switchAnime(0);
-
-
-		for (size_t i = 0; i < networkplayer.getModelHandlesSize(); i++)
-		{
-			if (i != network.myconnection)
-			{
-				networkplayer.playAnime(i);
-
-				if (!networkplayer.networkGetCommand(i, 5) && networkplayer.nowanimeindex[i] == 2 || networkplayer.nowanimeindex[i] == 2 && networkplayer.brendflag[i] && !networkplayer.networkGetCommand(i, 5))networkplayer.switchAnime(i, 1);
-				if (networkplayer.networkGetCommand(i, 5) && networkplayer.nowanimeindex[i] == 1 || networkplayer.nowanimeindex[i] == 1 && networkplayer.brendflag[i] && networkplayer.networkGetCommand(i, 5))networkplayer.switchAnime(i, 2);
-				if (networkplayer.networkGetCommand(i,3) && networkplayer.nowanimeindex[i] == 0 || networkplayer.nowanimeindex[i] == 0 && networkplayer.brendflag[i])networkplayer.switchAnime(i, 1);
-				if (!networkplayer.networkGetCommand(i, 3) && networkplayer.nowanimeindex[i] != 0 || networkplayer.nowanimeindex[i] != 0 && networkplayer.brendflag[i] && !networkplayer.networkGetCommand(i, 5))networkplayer.switchAnime(i, 0);
-			}
-		}
-
-		if (player.vehicle !=0)
-		{
-			camera.CameraAdditionally(objectmanager.getCarPos(player.vehicle - 1), objectmanager.getCar(player.vehicle - 1)->getRot());
-
-			player.setPosBullet(VAdd(objectmanager.getCarPos(player.vehicle - 1),VGet(0,10,0)));
-
-			objectmanager.driveCar(player.vehicle - 1);
-		}
-		else
-		{
-			camera.MouseCamera(player.getPos(), VGet(0, 13.8f, 0));
-		}
-
-		//player.playerMovementMouse(stage.getModelHandle());
-
-		objectmanager.update();
-
-		sky.draw();
-		sky.setPos(player.getPos());
-
-		stage.draw();
-
-		object.draw();
-		objectmanager.draw();
-		if (player.vehicle == 0)player.draw();
-		networkplayer.drawPlayers();
-
-
-		if (player.vehicle != 0)
-		{
-			btScalar speed = objectmanager.getSpeed(player.vehicle - 1);
-			DrawFormatString(0, 0, -1, "speed %f", -speed / 10);
-
-			if (-speed / 10 < 1.f)
-			{
-				DrawString(ConvWorldPosToScreenPos(objectmanager.getCarPos(player.vehicle - 1)).x, ConvWorldPosToScreenPos(objectmanager.getCarPos(player.vehicle - 1)).y - 200.f, "VƒL[‚ğ‰Ÿ‚µ‚Ä~‚è‚é", -1);
-
-				if (CheckHitKey(KEY_INPUT_V) == 1)vkey = 1;
-				if (vkey == 1 && CheckHitKey(KEY_INPUT_V) == 0)
-				{
-					network.downOwnership(player.vehicle - 1);
-
-					player.setPosBullet(VAdd(objectmanager.getCarPos(player.vehicle - 1), VGet(25, 15, 25)));
-
-					player.vehicle = 0;
-					vkey = 0;
-				}
-			}
-		}
-
-		if (player.vehicle == 0)
-		{
-			for (size_t i = 0; i < objectmanager.carSize(); i++)
-			{
-				if (sqrt(player.calculation_distance(player.getPos(), objectmanager.getCarPos(i))) < 30.0f)
-				{
-					DrawString(ConvWorldPosToScreenPos(objectmanager.getCarPos(i)).x, ConvWorldPosToScreenPos(objectmanager.getCarPos(i)).y - 200.f, "VƒL[‚ğ‰Ÿ‚µ‚Äæ‚é", -1);
-
-					if (CheckHitKey(KEY_INPUT_V) == 1)vkey = 1;
-					if (vkey == 1 && CheckHitKey(KEY_INPUT_V) == 0)
-					{
-						network.getOwnership(i);
-
-						if (objectmanager.getOwnership(i) == 0)
-						{
-							player.vehicle = i + 1;
-							vkey = 0;
-						}
-						else if (objectmanager.getOwnership(i) == 1)
-						{
-							vkey = 0;
-						}
-
-					}
-				}
-			}
-		}
-		else
-		{
-			if (player.vehicle == 0)vkey = 0;
-		}
-
-
-		if (network.useNetwork == 1)
-		{
-			scene.displayMyName();
-			scene.displayName();
-
-			scene.displayChatToScreen();
-			scene.yotubeRequest();
-		}
-
-		if (network.YoutubeURL.size() != 0 && movieflag == 0)
-		{
-			int f = yotube.playYotubeMovie(network.YoutubeURL);
-
-			if (f == 1)
-			{
-				movieflag = 1;
-
-				network.YoutubeURL = "";
-				network.Extension = -1;
-
-				//5•ªi300*10000000ƒiƒm•bjˆÈã‚¾‚Á‚½‚ç
-				if (yotube.getMovieStopTime() > 3000000000)ank = 1;
-				else ank = 0;
-				
-				network.YoutubeMessege.push_back("“®‰æ‚Ì€”õ‚ªŠ®—¹‚µ‚Ü‚µ‚½");
-
-				std::string hun = std::to_string((double)(yotube.getMovieStopTime() / 60) / 10000000);
-				network.YoutubeMessege.push_back("“®‰æŠÔ : " + hun.substr(0, hun.find('.')+2) + "•ª");
-			}
-			else
-			{
-				if (f == -1)
-				{
-					network.YoutubeMessege.push_back("“®‰æ‚ÌÄ¶‚É¸”s‚µ‚Ü‚µ‚½");
-
-					network.YoutubeURL = "";
-					network.Extension = -1;
-					network.PlayStartTime = 0;
-
-					network.sendyotubecommand = 3;
-				}
-
-				movieflag = 0;
-			}
-		}
-		if (movieflag == 1)
-		{
-			time_t timer;
-			time(&timer);
-
-			if (timer >= network.PlayStartTime)
-			{
-				yotube.playMovie();
-				movieflag = 2;
-
-				network.YoutubeMessege.push_back("“®‰æ‚ÌÄ¶‚ğŠJn‚µ‚Ü‚·");
-			}
-		}
-		if (movieflag == 2)
-		{
-			yotube.updateYotubeMovie();
-			
-			int volume = 0;
-			//‹——£‚ğŒvZ
-			float Length = sqrt(player.calculation_distance(player.getPos(), object.getPos()));
-			volume = -(int)Length*Length/100;
-			if (Length < 100)volume = -100; else if (Length > 1000)volume = -10000;
-			yotube.setVolume(volume);
-
-			yotube.setVolume(volume);
-
-			if ( yotube.Playing() == 0 || network.Extension == 0)
-			{
-				network.YoutubeMessege.push_back("“®‰æ‚ÌÄ¶‚ÌÄ¶‚ªI—¹‚µ‚Ü‚µ‚½");
-
-				network.YoutubeURL = "";
-				network.Extension = -1;
-				network.PlayStartTime = 0;
-
-				network.sendyotubecommand = 3 ;
-
-				yotube.setVolume(-10000);
-
-				movieflag = 0;
-			}
-		}
-
-		if (network.useNetwork == 1)
-		{
-			scene.yotubeQuestionnaire(ank);
-
-			scene.displayChat();
-		}
-
-		network.candelete = 1;
-
-		Fps.displayFps(1280 - 20, 0);
-
-		Fps.controlFps();
-	}
-
-	if (network.useNetwork == 1)t.detach();
-
-	network.close();
 
 	DxLib_End();
 

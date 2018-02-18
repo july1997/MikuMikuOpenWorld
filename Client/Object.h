@@ -1,42 +1,63 @@
 #pragma once
 
-#include "Model.h"
+#include "Common/Model.h"
 #include "Bullet_physics.h"
-#include "Car.h"
+
 
 #include <vector>
 #include <memory> 
 
-//現在のclass Objectの利点：複製が容易
-
-//bulletとの連携
-//配置するときの便利ビュー
+//物理演算しないためにはModel.hをお使いください
 class Object : public Model
 {
 protected:
 
-	std::vector<int> modelhandles;
+	Bullet_physics *bullet;
+	int world;
+	std::vector<VECTOR> forms;
+	std::vector<int> bodyhandel;
 
-	float parentmodelscale = 1;
+	size_t objects = 0;
+
+	std::vector<std::shared_ptr<Model>> models;
+
+	VECTOR testingpos = VGet(0,0,0), testingrot = VGet(0,0,0);
 
 public:
-	Object();
+	Object(Bullet_physics *_bullet, int _world);
 
-	void copyModel(int copyNum);
+	//モデルのメッシュから剛体を作成
+	size_t loadModel(const char *FileName, float scale);
 
-	void copiedsetPos(int copiedhandle, VECTOR pos);
+	size_t loadModel(const char *FileName, VECTOR Form, float scale);
 
-	void copiedsetRot(int copiedhandle, VECTOR rot);
+	size_t deleteModel(int object);
 
-	void copiedsetScale(int copiedhandle,float scale);
+	size_t copyModel(int object, float scale = 1.0f);
 
-	int getCopyModel(int copiedhandle);
+	int setPos(int object, VECTOR pos);
 
-	virtual void setScale(float scale);
+	int setRot(int object, VECTOR rot);
 
+	int setScale(int object, float scale, float mass = 1);
+
+	virtual int getModelHandle(int object);
+
+	VECTOR getPos(int object);
+
+	VECTOR getRot(int object);
+	
+	//オブジェクトの位置をキーボードで移動できるようにします
+	void testingPositioning(int object);
+
+	//全モデルの位置を更新
+	void update();
+
+	//モデルを全て描画
 	virtual void draw();
 };
 
+/*
 //オブジェクトの管理
 class ObjectManager
 {
@@ -55,13 +76,18 @@ class ObjectManager
 
 public:
 
-	ObjectManager(Bullet_physics *_bullet,int _world);
+	ObjectManager::ObjectManager(Bullet_physics *_bullet, int _world)
+	{
+		bullet = _bullet;
+
+		world = _world;
+	}
 
 	void addObject(size_t type,VECTOR Form)
 	{
 		if (type == 0)
 		{
-			object.push_back(std::shared_ptr<Object>(new Object));
+			object.push_back(std::shared_ptr<Object>(new Object(bullet, world)));
 
 			object[objects]->loadModel("dice.mv1");
 			object[objects]->setScale(10.f);
@@ -175,3 +201,4 @@ public:
 		return car[cars];
 	}
 };
+*/

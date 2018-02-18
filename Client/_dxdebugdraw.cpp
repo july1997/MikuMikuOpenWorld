@@ -1,4 +1,4 @@
-///DXライブラリ用のbulletデバッグドロー
+//DXライブラリ用のBox2Dのデバッグドロー
 
 #include "_dxdebugdraw.h"
 
@@ -11,7 +11,6 @@ DxDebugDraw::DxDebugDraw()
 
 void DxDebugDraw::drawLine(const btVector3& from,const btVector3& to,const btVector3& fromColor, const btVector3& toColor)
 {
-	if (VSize(VAdd(limpos, btVGet(from)))<500)
 	DrawLine3D(btVGet(from), btVGet(to), 
 		GetColor( int(fromColor.getX()*255), int(fromColor.getY()*255), int(fromColor.getZ()*255) )
 		);

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "Font.h"
 
@@ -21,19 +21,22 @@ class UI : public Font
 	std::vector<int> DeletedBox;
 
 	std::vector<int> InputHandle;
-	int NowActiveKey, Flash = 0, SelectClauseX;
+	std::vector<int> CloseInput;
+	int NowActiveKey, NowActiveKeyI, Flash = 0, SelectClauseX;
 
 	std::vector<std::string> ButtonString;
+
 public:
 
-	void drawBackground(char *Picture);
+	void loadBackgroundImage(const char *Picture);
+	void drawBackgroundImage();
 
 
 	int makeBoxRoundedBar(int XLength, int YLength, int EarlyX = 0, int EarlyY = 0, int Color = -1, int BarColor = 13882323, int Barhigh = 15, int EdgeSize = 8, int AntiAliasing = 2, int Margin = 3);
 
 	int makeBoxRounded(int XLength, int YLength, int Color = -1, int EarlyX = 0, int EarlyY = 0, int EdgeSize = 8, int AntiAliasing = 2, int Margin = 3);
 
-	//“à•”‚Å‰æ‘œƒf[ƒ^‚ğì‚ç‚È‚¢
+	//å†…éƒ¨ã§ç”»åƒãƒ‡ãƒ¼ã‚¿ã‚’ä½œã‚‰ãªã„
 	void directDrawBoxRounded(int x, int y, int XLength, int YLength, int BlendRate = 255, int Color = -1, int EdgeSize = 8, int AntiAliasing = 2, int Margin = 3);
 
 	void changeBoxRoundedBar(int BoxHandel, int XLength, int YLength, int Color = -1, int BarColo = 13882323, int Barhigh = 15, int EdgeSize = 8, int AntiAliasing = 2, int Margin = 3);
@@ -44,43 +47,49 @@ public:
 
 	void drawBox(int BoxHandel, int BlendRate = 255);
 
-	//Box‚Éƒ}ƒEƒX‘€ì‚ğ—^‚¦‚é(bar•t‚«‚Ì‚İ)
+	//Boxã«ãƒã‚¦ã‚¹æ“ä½œã‚’ä¸ãˆã‚‹(barä»˜ãã®ã¿)
 	void updateBox(int BoxHandel);
 
-	//ƒ}ƒEƒX‘€ì‚ÅBoxƒTƒCƒY‚ğ•ÏX‚·‚é
+	//ãƒã‚¦ã‚¹æ“ä½œã§Boxã‚µã‚¤ã‚ºã‚’å¤‰æ›´ã™ã‚‹
 	void updateSize(int BoxHandel, int MinimumValueX=0, int MinimumValueY=0, int Color = -1, int BarColor = 13882323, int Barhigh = 15, int EdgeSize = 8, int AntiAliasing = 2, int Margin = 3);
 
-	//ƒ}ƒEƒX‚Å‚ÌƒXƒNƒ[ƒ‹‘€ì‚ğ—^‚¦‚é
+	//ãƒã‚¦ã‚¹ã§ã®ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«æ“ä½œã‚’ä¸ãˆã‚‹
 	int updateScroll(int BoxHandel, int downlimit=0, int ScrollBarColor = 13882323);
 
 	void setScroll(int BoxHandel, int scroll);
 
-	//” ‚Ì—Ş‚Ì‚‚³
+	//ç®±ã®é¡ã®é«˜ã•
 	int getBoxHeight(int BoxHandel);
 
-	//” ‚Ì—Ş‚Ì‰¡•
+	//ç®±ã®é¡ã®æ¨ªå¹…
 	int getBoxWidth(int BoxHandel);
 
 	void deleteBox(int BoxHandel);
 
-	//” ‚É•¶š—ñ‚ğ•`‰æ‚·‚é
+	//ç®±ã«æ–‡å­—åˆ—ã‚’æç”»ã™ã‚‹
 	void drawStringToBox(int BoxHandel, std::string string, int InBoxX, int InBoxY, int FontHandel, bool Center = 0, int Color = -1, int WidthLimit = 10);
 
-	//“ü—Í—“
-	int makeInputBox(int XLength, int YLength, int maxlengh = 36, char *initString = "", bool cancancel = 0);
-	//InputBox‚ğì‚Á‚½‚ç‚Ç‚ê‚©‚Ğ‚Æ‚Â‚Í•K‚¸—LŒø‚É‚µ‚Ä‚­‚¾‚³‚¢@—\Šú‚µ‚È‚¢“®ì‚ª‹N‚±‚éê‡‚ª‚ ‚è‚Ü‚·
+	//å…¥åŠ›æ¬„
+	int makeInputBox(int XLength, int YLength, int color = -1 ,int maxlengh = 36, const char *initString = 0, bool cancancel = 0, bool SingleOnly = 0, bool NumOnly = 0);
+	//InputBoxã‚’ä½œã£ãŸã‚‰ã©ã‚Œã‹ã²ã¨ã¤ã¯å¿…ãšæœ‰åŠ¹ã«ã—ã¦ãã ã•ã„ã€€äºˆæœŸã—ãªã„å‹•ä½œãŒèµ·ã“ã‚‹å ´åˆãŒã‚ã‚Šã¾ã™
 	void activateInputBox(int BoxHandel);
-	void drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int InBoxY, int &FontHandel, int BlendRate = 255, bool drawString = 1, bool Relative = 0);
-	bool updateInputBox(int InputBoxHandel, std::string &data);
+	void drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int InBoxY, int &FontHandel, int BlendRate = 255, bool drawString = 1, bool Relative = 0,bool Asterisk = 0);
+	bool updateInputBox(int InputBoxHandel, std::string data = "");
 	int getNowActiveKey();
 	std::string getInputString(int InputBoxHandel);
-	void setInputString(int InputBoxHandel, char *setString);
-	
-	//ƒ{ƒ^ƒ“
-	int makeButton(const char *drawString, int &FontHandel);
+	void setInputString(int InputBoxHandel, const char *setString);
+	int getNowActiveKeyI();
+
+	//ãƒœã‚¿ãƒ³
+	int makeButton(const char *drawString, int &FontHandel, int color = -1);
 	void drawButtonToBox(int BoxHandel, int ButtonHandel, int InBoxX, int InBoxY, int BlendRate = 255, bool Relative=0);
 	bool updateButton(int BoxHandel);
 	void drawButton(int ButtonHandel, int X, int Y, int BlendRate = 255);
 	std::string getButtonString(int ButtonHandel);
+
+	//ä¾¿åˆ©ç³»
+	int clearScreen();
+	int show();
+	void drawMausePoint();
 };
 

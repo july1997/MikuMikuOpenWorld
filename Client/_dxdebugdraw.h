@@ -1,4 +1,5 @@
-//DXライブラリ用のbulletデバッグドロー
+//わくわくプログラミング自習室　様よりお借りしました
+//DXライブラリ用のBox2Dのデバッグドロー
 
 #include <DxLib.h>
 
@@ -10,9 +11,6 @@ private:
 	//座標変換
 	inline VECTOR btVGet(const btVector3 &inv){return VGet(inv.getX(), inv.getY(), inv.getZ());}
 public:
-
-	VECTOR limpos=VGet(0,0,0);
-
 	DxDebugDraw();
 	virtual void drawLine(const btVector3& from,const btVector3& to,const btVector3& fromColor, const btVector3& toColor);
 	virtual void drawLine(const btVector3& from,const btVector3& to,const btVector3& color);

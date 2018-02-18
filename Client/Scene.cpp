@@ -1,640 +1,415 @@
-#include "Scene.h"
+ï»¿#include "Scene.h"
 
-#include "Youtube.h"
 
-#include "DxLib.h"
 
-Scene::Scene(Network *network_)
+Scene::Scene(std::shared_ptr<NetworkManager> network_)
 {
 	network = network_;
+
+	//ç”»åƒã®èª­ã¿è¾¼ã¿
+	ui.loadBackgroundImage("Picture/background.jpg");
+	font3 = ui.loadDxFont("Font/Koruri Light4.dft");
+	font2 = ui.loadDxFont("Font/Koruri Light3.dft");
+	font = ui.loadDxFont("Font/Koruri Light2.dft");
 }
 
-bool Scene::Login()
+
+Scene::~Scene()
 {
-	ui = new UI;
-	font = ui->makeFont(18, 3);
-
-	ui->drawBackground("design/Image Background.png");
-
-	bigfont = ui->makeFont(24, 6);
-	int boxfont = ui->makeFont(18, 3);
-	int box = ui->makeBoxRoundedBar(400, 400, 440, 200);
-	int input = ui->makeInputBox(360, 30, 36, "mikumikuopenworld.ddns.net");//42-146-229-131.rev.home.ne.jp
-	int input2 = ui->makeInputBox(360, 30,36,"192.168.11.2");
-	ui->activateInputBox(input);
-
-	int ok = ui->makeButton("OK", font);
-	int offline = ui->makeButton("ƒIƒtƒ‰ƒCƒ“", font);
-	bool setNetwork = 0;
-
-	FpsManager fps;
-	int sc = 0, e = 0; bool inputend = 0; std::string inp; int error = 0;
-	while (ProcessMessage() == 0 && exitConfirm() == 0)
-	{
-		ui->drawBackground("design/Image Background.png");
-
-		ui->drawString(640 - 880 * sin(DX_PI_F / 180 * e) * 2, 100, "ƒƒOƒCƒ“", bigfont, 1);
-
-		if (sc != 90)
-		{
-			sc++;
-			ui->changeBoxRoundedBar(box, 440, 300 * sin(DX_PI_F / 180 * sc));
-		}
-
-		ui->updateBox(box);
-
-		if (inputend == 1)
-		{
-			ui->drawBox(440 - 880 * sin(DX_PI_F / 180 * e) * 2, 200, box, 128);
-		}
-		else
-		{
-			ui->drawBox(box, 128);
-		}
-
-		ui->drawStringToBox(box, "ƒzƒXƒg–¼‚©‚çÚ‘±", 20, 20, boxfont);
-		ui->drawInputBoxToBox(box, input, 20, 40, boxfont, 128);
-
-		ui->drawStringToBox(box, "IPƒAƒhƒŒƒX‚©‚çÚ‘±", 20, 110, boxfont);
-		ui->drawInputBoxToBox(box, input2, 20, 130, boxfont, 128);
-
-		ui->drawButtonToBox(box, ok, 200, 230, 72);
-		ui->drawButtonToBox(box, offline, 310, 260, 72);
-
-		if (ui->updateInputBox(input, inp) && inputend == 0)
-		{
-			if (!network->connectHostName(inp))inputend = 1, error = 0;
-			else ui->setInputString(input, ""), error=1;
-		}
-
-		if (ui->updateInputBox(input2, inp) && inputend == 0)
-		{
-			if (!network->connectIP(inp))inputend = 1, error = 0;
-			else ui->setInputString(input2, ""), error=2;
-		}
-
-		if (ui->updateButton(ok) == 1 && inputend == 0)
-		{
-			if (ui->getNowActiveKey() == input)
-			{
-				inp = std::string(ui->getInputString(ui->getNowActiveKey()));
-				if (!network->connectHostName(inp))inputend = 1, error = 0;
-				else ui->setInputString(input, ""), error=1;
-			}
-			else
-			{
-				inp = std::string(ui->getInputString(ui->getNowActiveKey()));
-				if (!network->connectIP(inp))inputend = 1, error = 0;
-				else ui->setInputString(input2, ""), error=2;
-			}
-		}
-
-		if (ui->updateButton(offline) == 1)
-		{
-			network->useNetwork = 0;
-			setNetwork = 1;
-		}
-		if (setNetwork == 1)break;
-
-
-		if (error == 1)ui->drawStringToBox(box, "ƒzƒXƒg–¼‚ªŠÔˆá‚Á‚Ä‚¢‚Ü‚·", 40, 20+ui->getBoxHeight(input)+20, font, 0, GetColor(237, 28, 36));
-		if (error == 2)ui->drawStringToBox(box, "IPƒAƒhƒŒƒX‚ªŠÔˆá‚Á‚Ä‚¢‚Ü‚·", 40, 110 + ui->getBoxHeight(input2)+20, font, 0, GetColor(237, 28, 36));
-
-		if (inputend == 1)
-		{
-			e++;
-			if (e == 90)break;
-		}
-
-		fps.displayFps(1260, 0);
-
-		fps.controlFps();
-	}
-
-	if (setNetwork != 1)
-	{
-		ui->deleteBox(input);
-		ui->deleteBox(input2);
-
-		network->login();
-
-		int input3 = ui->makeInputBox(360, 30, 16);
-		ui->activateInputBox(input3);
-
-		e = -90; int b = LoadBlendGraph("Picture/b.png"); std::string n; inputend = 0;
-		while (ProcessMessage() == 0 && exitConfirm() == 0)
-		{
-			ui->drawBackground("design/Image Background.png");
-
-			ui->drawString(640 - 640 * sin(DX_PI_F / 180 * e) * 2, 100, "–¼‘O‚Ì“ü—Í", bigfont, 1);
-
-			ui->drawBox(440 - 640 * sin(DX_PI_F / 180 * e) * 2, 200, box, 128);
-
-			ui->drawStringToBox(box, "–¼‘Oi‘SŠp8•¶š‚Ü‚Å,“ü—Í–³‚µ‚à‰Â”\)", 20, 30, boxfont);
-			ui->drawInputBoxToBox(box, input3, 20, 50, boxfont, 128);
-
-			ui->drawButtonToBox(box, ok, 200, 250, 72);
-
-			if (e < 0)
-			{
-				e++;
-			}
-
-			if (ui->updateInputBox(input3, n) == 1 && inputend == 0)
-			{
-				inputend = 1;
-			}
-
-			if (ui->updateButton(ok) == 1 && inputend == 0)
-			{
-				n = std::string(ui->getInputString(ui->getNowActiveKey()));
-				inputend = 1;
-			}
-
-			if (inputend)
-			{
-				e++;
-				if (e == 90)break;
-
-				SetDrawBlendMode(DX_BLENDMODE_ALPHA, e * 3);
-				DrawGraph(0, 0, b, FALSE);
-				SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-			}
-
-			fps.displayFps(1260, 0);
-
-			fps.controlFps();
-		}
-
-		ui->deleteBox(ok);
-		ui->deleteBox(input3);
-		ui->deleteBox(box);
-
-		ClearDrawScreen();
-		ui->drawString(640, 300, "Now Loading...", boxfont, 1);
-		ScreenFlip();
-
-		network->setup(n);
-	}
-	else
-	{
-		ClearDrawScreen();
-		ui->drawString(640, 300, "Now Loading...", boxfont, 1);
-		ScreenFlip();
-	}
-
-	return 0;
 }
 
-bool Scene::exitConfirm()
+bool Scene::connect()
 {
-	//ƒEƒBƒ“ƒhƒE‚ª•Â‚¶‚ç‚ê‚æ‚¤‚Æ‚µ‚Ä‚¢‚é ‚© ESCAPEƒL[‚ª‰Ÿ‚³‚ê‚Ä‚¢‚é
-	if (GetWindowUserCloseFlag(1) == TRUE || CheckHitKey(KEY_INPUT_ESCAPE) == 1)
+	bool error = 0;
+	if (!network->connect())error = 1;
+
+	while (ProcessMessage() == 0 && error == 1)
 	{
-		FpsManager fps;
+		if (CheckHitKey(KEY_INPUT_ESCAPE) != 0)return 0;
 
-		int scr = MakeGraph(1280, 720);
-		GetDrawScreenGraph(0, 0, 1280, 720, scr);
+		ui.drawBackgroundImage();
 
-		GraphFilter(scr, DX_GRAPH_FILTER_GAUSS, 8, 1000);
+		ui.drawString(font2, u8"ã‚µãƒ¼ãƒã«æ¥ç¶šã§ãã¾ã›ã‚“", 640, 280, 1, GetColor(237, 28, 36));
 
-		int box = ui->makeBoxRoundedBar(600, 210, 340, 230);
-		int yes = ui->makeButton("‚Í‚¢",font);
-		int no = ui->makeButton("‚¢‚¢‚¦", font);
-
-		while (ProcessMessage() == 0)
-		{
-			DrawGraph(0, 0, scr, FALSE);
-
-			ui->updateBox(box);
-			ui->drawBox(box,128);
-
-			ui->drawButtonToBox(box,yes,150,150, 72);
-			ui->drawButtonToBox(box, no, 400, 150, 72);
-
-			if (ui->updateButton(yes) == 1){
-				EndFlag = 1; 
-				break; 
-			}
-
-			if (ui->updateButton(no) == 1){
-				GetWindowUserCloseFlag(EndFlag); 
-				break;
-			}
-
-			ui->drawStringToBox(box, "I—¹‚µ‚Ü‚·‚©H", 300,40 ,bigfont ,1);
-
-			fps.controlFps();
-		}
-
-		ui->deleteBox(box);
-		ui->deleteBox(yes);
-		ui->deleteBox(no);
-
-		if (EndFlag == 1)
-		{
-			DrawGraph(0, 0, scr, FALSE);
-			ui->drawStringToBox(box, "I—¹‚µ‚Ä‚¢‚Ü‚·EEE", 300, 40, bigfont, 1);
-			ScreenFlip();
-		}
+		fps.displayFps(1280 - 20, 0);
+		fps.measureFps();
 	}
 
-	ClearDrawScreen();
-
-	return EndFlag;
+	return 1;
 }
 
-void Scene::displayMyName()
+bool Scene::login()
 {
-	std::string name;
+	if (!connect())return 0;
 
-	VECTOR pos = network->getMyChara(name);
+	int box = ui.makeBoxRoundedBar(400, 170, 440, 295, GetColor(145, 145, 145), 13882323, 36);
+	int input = ui.makeInputBox(260, 30, 13882323, 36, "", 0, 1);
+	ui.activateInputBox(input);
+	int input2 = ui.makeInputBox(260, 30, 13882323, 36, "", 0, 1);
 
-	ui->drawString((int)pos.x, (int)pos.y, name, font, 1);
-}
+	int ok = ui.makeButton(u8"ãƒ­ã‚°ã‚¤ãƒ³", font, 13882323);
+	int signup = ui.makeButton(u8"æ–°è¦ç™»éŒ²", font, 13882323);
 
-void Scene::displayName()
-{
-	for (int i = 0; i < network->getPlayerNun(); i++)
+	bool warning = 0, toomis = 0, error = 0;
+	while (ProcessMessage() == 0)
 	{
-		if (i != network->getMycone())
-		{
-			std::string name;
+		if (CheckHitKey(KEY_INPUT_ESCAPE) != 0)return 0;
 
-			VECTOR pos = network->getChara(name, i);
-
-			ui->drawString((int)pos.x, (int)pos.y, name, font, 1);
-		}
-	}
-}
-
-void Scene::displayChatToScreen()
-{
-	if (network->messege_Size() != displaytedsize)
-	{
-		for (size_t i = displaytedsize; i < network->messege_Size(); i++)
-		{
-			if (network->MessegeOrigin[i] != -1)
-			{
-				sowtime.push_back(0);
-
-				playernunbermessege.push_back(network->MessegeOrigin[i]);
-
-				std::string ten(" : ");
-				std::string header = network->HandelName[network->MessegeOrigin[i]] + ten;
-
-				std::string tes(network->getMessege(i).substr(header.size(), network->getMessege(i).size() - 1));
-
-				hukidasi.push_back(ui->makeButton(network->getMessege(i).substr(header.size(), network->getMessege(i).size() - 1).c_str(), font));
-			}
-			else
-			{
-				sowtime.push_back(0);
-				playernunbermessege.push_back(0);
-				hukidasi.push_back(0);
-			}
+		if (!network->CorrectVersion) {
+			MessageBox(GetMainWindowHandle(), "MikuMikuOpenWorld ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ãŒé•ã„ã¾ã™", "error", MB_OK);
+			return 0;
 		}
 
-		displaytedsize = network->messege_Size();
-	}
+		ui.drawBackgroundImage();
 
-	if (playernunbermessege.size() > 0)
-	{
-		if (showmessegenun != displaytedsize)
+		ui.drawString(font3, u8"Miku Miku Open World Ver0.0.1", 0, 0, 0, GetColor(238, 238, 238));
+
+		ui.drawString(font2, u8"ãƒ­ã‚°ã‚¤ãƒ³ç”»é¢", 640, 200, 1);
+		ui.updateBox(box);
+		ui.updateSize(box, 400, 150, GetColor(145, 145, 145), 13882323, 36);
+		ui.drawBox(box, 128);
+
+		ui.drawStringToBox(box, u8"E-mail", ui.getBoxWidth(box) / 2 - 120, ui.getBoxHeight(box) / 2 - 40, font, 1);
+		ui.drawStringToBox(box, u8"ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰", ui.getBoxWidth(box) / 2 - 140, ui.getBoxHeight(box) / 2, font, 1);
+
+		ui.drawInputBoxToBox(box, input, ui.getBoxWidth(box) / 2 - 90, ui.getBoxHeight(box) / 2 - 40, font, 128);
+		ui.drawInputBoxToBox(box, input2, ui.getBoxWidth(box) / 2 - 90, ui.getBoxHeight(box) / 2, font, 128, 1, 0, 1);
+
+		ui.updateInputBox(input);
+		ui.updateInputBox(input2);
+
+		ui.drawButtonToBox(box, ok, ui.getBoxWidth(box) - 110, ui.getBoxHeight(box) - 40, 72);
+		ui.drawButtonToBox(box, signup, ui.getBoxWidth(box) - 220, ui.getBoxHeight(box) - 40, 72);
+
+		//ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸ
+		if (ui.updateButton(ok) == 1 || ui.updateInputBox(ui.getNowActiveKey()) == 1)
 		{
-			for (size_t i = showmessegenun; i < hukidasi.size(); i++)
-			{
-				if (network->MessegeOrigin[i] != -1)
-				{
-					if (sowtime[i] != 150)
-					{
-						if (playernunbermessege[i] == network->getMycone())
-						{
-							std::string name;
-							std::string mess = ui->getButtonString(hukidasi[i]);
+			std::string mail = ui.getInputString(input);
+			std::string pass = ui.getInputString(input2);
 
-							VECTOR pos = network->getMyChara(name);
-
-							ui->drawButton(hukidasi[i], pos.x - GetDrawFormatStringWidthToHandle(ui->getFont(font), name.c_str()) / 2
-								- GetDrawFormatStringWidthToHandle(ui->getFont(font), mess.c_str()) / 2, pos.y - 25, 128);
-						}
-						else
-						{
-							std::string name;
-							std::string mess = ui->getButtonString(hukidasi[i]);
-
-							VECTOR pos = network->getChara(name, playernunbermessege[i]);
-
-							ui->drawButton(hukidasi[i], pos.x - GetDrawFormatStringWidthToHandle(ui->getFont(font), name.c_str()) / 2
-								- GetDrawFormatStringWidthToHandle(ui->getFont(font), mess.c_str()) / 2, pos.y - 25, 128);
-							
-						}
-
-						if (sowtime[i] != 150)sowtime[i]++;
+			if (illegalChara(mail) && illegalChara(pass) && mail.find("@") != string::npos && !toomis) {
+				int j = 0, time = 0;
+				network->startCommunication();
+				j = network->getid();
+				while (j == 0 && ProcessMessage() == 0) {
+					j = network->getid();
+					time++;
+					if (time > 600)j = -3;
+					fps.controlWaitFps();
+				}
+				if (j == 1) {
+					WaitTimer(500);
+					network->login(mail, pass);
+					j = network->getid();
+					while (j == 0 && ProcessMessage() == 0) {
+						j = network->getid();
+						time++;
+						if (time > 600)j = -3;
+						fps.controlWaitFps();
+					}
+					if (j > 0) {
+						break;
+					}
+					else {
+						if (j == -1)warning = 1;
+						if (j == -2)toomis = 1;
+						if (j == -3)error = 1;
+						ui.activateInputBox(input);
+						ui.setInputString(input, ""), ui.setInputString(input2, "");
 					}
 				}
 			}
+			else ui.activateInputBox(input), ui.setInputString(input, ""), ui.setInputString(input2, ""), warning = 1;
 		}
-	}
-}
-
-void Scene::displayChat()
-{
-	if (!showchat)
-	{
-		chatbox = ui->makeBoxRoundedBar(600, 200, 650, 490, GetColor(175,175,175),13882323,36);
-
-		chatinputbox = ui->makeInputBox(300, 30, 60,"",1);
-
-		sousin = ui->makeButton("‘—M", font);
-
-		showchat = 1;
-	}
-
-	ui->updateBox(chatbox);
-	ui->updateSize(chatbox, 200, 200, GetColor(175, 175, 175), 13882323, 36);
-
-	ui->drawBox(chatbox, 186);
-
-	ui->drawStringToBox(chatbox, "ƒRƒƒ“ƒg", ui->getBoxWidth(chatbox) / 2, 2, font, 1);
-
-	if (ui->getBoxWidth(chatbox) - 100 > 100)ui->changeBoxRounded(chatinputbox, ui->getBoxWidth(chatbox) - 100, 30);
-
-	if (inp == 0)
-	{
-		ui->drawInputBoxToBox(chatbox, chatinputbox, 30, ui->getBoxHeight(chatbox) - 50, font, 128);
-	}
-	else
-	{
-		ui->drawInputBoxToBox(chatbox, chatinputbox, 30, ui->getBoxHeight(chatbox) - 50, font, 128, 0);
-	}
-
-	ui->drawButtonToBox(chatbox, sousin, 70, 50, 72,1);
-
-	if (ui->updateInputBox(chatinputbox, messe) == 1 && inp == 0 || ui->updateButton(sousin) == 1 && inp == 0)
-	{
-		if (ui->updateButton(sousin) == 1)messe = std::string(ui->getInputString(chatinputbox));
-
-		network->inputChat(messe);
-
-		ui->setInputString(chatinputbox,"");
-
-		inputi = 1;
-
-		inp = 1;
-	}
-	
-	if (inp == 1 && ui->updateInputBox(chatinputbox, messe) == 0)
-	{
-		inp = 0;
-	}
-
-	int scroll = ui->updateScroll(chatbox,30);
-
-	if (network->messege_Size() > 0)
-	{
-		if (network->messege_Size() != chatmessegesize)
+		else if (ui.updateButton(signup))//ç™»éŒ²ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸ
 		{
-			for (size_t i = chatmessegesize; i < network->messege_Size(); i++)
-			{
-				chatmessege.push_back(network->getMessege(i));
-			}
+			std::string mail = ui.getInputString(input);
+			std::string pass = ui.getInputString(input2);
 
-			chatmessegesize = network->messege_Size();
-		}
-
-		int FontSize;
-		GetFontStateToHandle(NULL, &FontSize, NULL, ui->getFont(font));
-
-		int max = ui->getBoxHeight(chatbox) / FontSize - 4;
-		if (max < 0)
-		{
-			max = chatmessege.size();
-
-			scroll = 0;
-		}
-		else
-		{
-			if (max + scroll >= chatmessege.size())scroll = chatmessege.size()-max;
-			if (scroll < 0)max = chatmessege.size(), scroll=0;
-			if (scroll == 0 && follow == 0)if (max <= chatmessege.size())scroll = chatmessege.size() - max, follow = 1;
-		}
-
-		for (int i = 0; i < max; i++)
-		{
-			ui->drawStringToBox(chatbox, chatmessege[i + scroll], 20, 24 + 18 * (i), font,0,-1,75);
-		}
-	}
-}
-
-bool Scene::inputting()
-{
-	if (!inputi)return 1;
-	else return inp;
-}
-
-void Scene::yotubeRequest()
-{
-	if (!yotubeboxinit)
-	{
-		yotubebox = ui->makeBoxRoundedBar(400, 300, 850, 160, GetColor(175, 175, 175), 13882323, 36);
-
-		yotubeinput = ui->makeInputBox(230, 30, 60, "", 1);
-
-		yotubebottun = ui->makeButton("ƒŠƒNƒGƒXƒg", font);
-
-		yotubeboxinit = 1;
-	}
-
-	ui->updateBox(yotubebox);
-	ui->updateSize(yotubebox, 300, 200, GetColor(175, 175, 175), 13882323, 36);
-	ui->drawBox(yotubebox, 186);
-
-	ui->drawStringToBox(yotubebox, "YouTube", ui->getBoxWidth(yotubebox) / 2, 2, font, 1);
-
-	if (ui->getBoxWidth(yotubebox) - 150 > 100)ui->changeBoxRounded(yotubeinput, ui->getBoxWidth(yotubebox) - 170, 30);
-	if (yinp == 0)
-	{
-		ui->drawInputBoxToBox(yotubebox, yotubeinput, 30, ui->getBoxHeight(yotubebox) - 50, font, 128);
-	}
-	else
-	{
-		ui->drawInputBoxToBox(yotubebox, yotubeinput, 30, ui->getBoxHeight(yotubebox) - 50, font, 128, 0);
-	}
-
-	if (ui->updateInputBox(yotubeinput, youtubeinm) == 1 && yinp == 0 
-		|| ui->updateButton(yotubebottun) == 1 && yinp == 0)
-	{
-		if (ui->updateButton(yotubebottun) == 1)youtubeinm = std::string(ui->getInputString(yotubeinput));
-
-		if (youtubeinm.find("https://www.youtube.com/watch?") != std::string::npos 
-			|| youtubeinm.find("http://www.nicovideo.jp/watch/sm") != std::string::npos)
-		{
-			time_t timer;
-			time(&timer);
-
-			if (RequestTime == 0 || RequestTime + 300 < timer)
-			{
-				network->sendYoutubeRequest(youtubeinm);
-
-				RequestTime = timer;
-			}
-			else
-			{
-				network->YoutubeMessege.push_back("˜A‘±‚ÅƒŠƒNƒGƒXƒgo—ˆ‚Ü‚¹‚ñ");
-			}
-			ui->setInputString(yotubeinput, "");
-		}
-		else
-		{
-			ui->setInputString(yotubeinput, "");
-
-			network->YoutubeMessege.push_back("URL‚ªŠÔˆá‚Á‚Ä‚¢‚Ü‚·");
-		}
-
-		yinp = 1;
-	}
-	if (yinp == 1 && ui->updateInputBox(yotubeinput, youtubeinm) == 0 && ui->updateButton(yotubebottun) == 0)
-	{
-		yinp = 0;
-	}
-
-	ui->drawButtonToBox(yotubebox, yotubebottun, 130, 50, 72, 1);
-
-	int scroll = ui->updateScroll(yotubebox, 30);
-
-	if (network->YoutubeMessege.size() > 0)
-	{
-		if (network->YoutubeMessege.size() != youtubemessege.size())
-		{
-			for (size_t i = youtubemessege.size(); i < network->YoutubeMessege.size(); i++)
-			{
-				youtubemessege.push_back(network->YoutubeMessege[i]);
-			}
-		}
-
-		int FontSize;
-		GetFontStateToHandle(NULL, &FontSize, NULL, ui->getFont(font));
-
-		int max = 4;
-		if (max < 0)
-		{
-			max = youtubemessege.size();
-
-			scroll = 0;
-		}
-		else
-		{
-			if (max + scroll >= youtubemessege.size())scroll = youtubemessege.size() - max;
-			if (scroll < 0)max = youtubemessege.size(), scroll = 0;
-			if (scroll == 0 && yfollow == 0)if (max <= youtubemessege.size())scroll = youtubemessege.size() - max, yfollow = 1;
-		}
-
-		for (int i = 0; i < max; i++)
-		{
-			ui->drawStringToBox(yotubebox, youtubemessege[i + scroll], 20, 18 * 2 + 18 * (i), font,0,-1,75);
-		}
-	}
-
-	ui->drawStringToBox(yotubebox, "ƒƒO", 5, 18, font);
-
-}
-
-void Scene::yotubeQuestionnaire(bool Enquete)
-{
-	time_t timer;
-	time(&timer);
-
-	if (network->PlayStartTime != 0)
-	{
-		if (timer < network->PlayStartTime)
-		{
-			//Ä¶ŠJn‘O
-
-			//“ú–{ŠÔ‚É•ÏŠ·
-			struct tm gmt;
-			errno_t err = localtime_s(&gmt, &timer);
-
-			ui->drawStringToBox(yotubebox, "Œ»İ‚Ì : " + std::to_string(gmt.tm_hour) + " : " + std::to_string(gmt.tm_min) + " . " + std::to_string(gmt.tm_sec), 20, 90 + 18, font);
-		}
-		else
-		{
-			ui->drawStringToBox(yotubebox, "Ä¶’†", 20, 90 + 18, font);
-
-			if (Enquete)
-			{
-				if (timer > network->PlayStartTime + (t_limitenquetegettime * qtime) - t_substartenquettime && questionnaire == 0)
-				{
-					questionnaire = 1;
-
-					network->YoutubeMessege.push_back("ƒAƒ“ƒP[ƒg‚ğŠJn‚µ‚Ü‚·");
+			if (illegalChara(mail) && illegalChara(pass) && mail.find("@") != string::npos && !toomis) {
+				int r = regist(mail, pass);
+				if (r == 1) {
+					tutorialf = 1;
+					break;
 				}
+				else {
+					if (r == 0)warning = 1;
+					if (r == -1)toomis = 1;
+					if (r == -2)error = 1;
+					ui.activateInputBox(input);
+					ui.setInputString(input, ""), ui.setInputString(input2, "");
+				}
+			}
+			else ui.activateInputBox(input), ui.setInputString(input, ""), ui.setInputString(input2, ""), warning = 1;
+		}
 
-				if (questionnaire == 1)
-				{
-					if (!Question)
-					{
-						Questionyes = ui->makeButton("‚Í‚¢", font);
-						Questionno = ui->makeButton("‚¢‚¢‚¦", font);
-						Question = 1;
-					}
-					ui->drawStringToBox(yotubebox, "ˆø‚«‘±‚«‚±‚Ì“®‰æ‚ğ‹’®‚µ‚Ü‚·‚©", 20, 90 + 18 + 18, font);
+		if (error) {
+			ui.drawString(font, u8"é€šä¿¡ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸ", 640, 250, 1, GetColor(237, 28, 36));
+		}
+		else if (toomis) {
+			ui.drawString(font, u8"ä¸€å®šä»¥ä¸Šé–“é•ãˆã¾ã—ãŸã€‚æœ€åˆã‹ã‚‰ã‚„ã‚Šç›´ã—ã¦ãã ã•ã„", 640, 250, 1, GetColor(237, 28, 36));
+		}
+		else if (warning) {
+			ui.drawString(font, u8"å…¥åŠ›ã•ã‚ŒãŸãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚„ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“", 640, 250, 1, GetColor(237, 28, 36));
+		}
 
-					ui->drawButtonToBox(yotubebox, Questionyes, 20, 144 + 18, 72);
-					ui->drawButtonToBox(yotubebox, Questionno, 80, 144 + 18, 72);
+		fps.displayFps(1280 - 20, 0);
+		fps.measureFps();
+	}
 
-					if (ui->updateButton(Questionyes) == 1 && yetq == 0)
-					{
-						yetq = 1;
+	ui.deleteBox(box);
+	ui.deleteBox(input);
+	ui.deleteBox(input2);
+	ui.deleteBox(ok);
+	ui.deleteBox(signup);
 
-						network->YoutubeMessege.push_back("ƒAƒ“ƒP[ƒg‚É^¬‚µ‚Ü‚µ‚½");
-					}
-					if (ui->updateButton(Questionno) == 1 && yetq == 0)
-					{
-						yetq = 1;
+	network->startSend();
 
-						network->sendyotubecommand = 1;
+	return 1;
+}
 
-						network->YoutubeMessege.push_back("ƒAƒ“ƒP[ƒg‚É”½‘Î‚µ‚Ü‚µ‚½");
-					}
+int Scene::regist(std::string mail, std::string pass) {
 
-					//WŒvŠÔ‚ğ‰ß‚¬‚½
-					if (timer > network->PlayStartTime + (t_limitenquetegettime * qtime))
-					{
-						if (yetq != 1)yetq = 1;
+	int box = ui.makeBoxRoundedBar(400, 170, 440, 295, GetColor(145, 145, 145), 13882323, 36);
 
-						//‰„’·‚µ‚È‚¢
-						if (network->Extension == 0)
-						{
-							yetq = 0;
+	int input = ui.makeInputBox(360, 30, 13882323, 36, "");
+	ui.activateInputBox(input);
 
-							network->PlayStartTime = 0;
+	int ok = ui.makeButton(u8"OK", font, 13882323);
 
-							questionnaire = 0;
-							qtime = 1;
+	bool warning = 0;
+	while (ProcessMessage() == 0) {
+		if (CheckHitKey(KEY_INPUT_ESCAPE) != 0)return 0;
+
+		ui.drawBackgroundImage();
+
+		ui.drawString(font2, u8"æ–°è¦ç™»éŒ²ç”»é¢", 640, 200, 1);
+
+		ui.updateBox(box);
+		ui.updateSize(box, 400, 150, GetColor(145, 145, 145), 13882323, 36);
+		ui.drawBox(box, 128);
+
+		ui.drawStringToBox(box, u8"åå‰ã‚’å…¥åŠ›", ui.getBoxWidth(box) / 2, 30, font, 1);
+
+		ui.drawInputBoxToBox(box, input, ui.getBoxWidth(box) / 2 - 180, ui.getBoxHeight(box) / 2, font, 128);
+
+		ui.drawButtonToBox(box, ok, ui.getBoxWidth(box) - 60, ui.getBoxHeight(box) - 48, 72);
+
+		if (ui.updateButton(ok) == 1 || ui.updateInputBox(input) == 1)
+		{
+			warning = 0;
+
+			std::string name = ui.getInputString(input);
+
+			if (Specialsymbol(name) && Invalidname(name)) {
+				int j = 0, time = 0;
+				network->startCommunication();
+				j = network->getid();
+				while (j == 0 && ProcessMessage() == 0) {
+					j = network->getid();
+					time++;
+					if (time > 600)j = -3;
+					fps.controlWaitFps();
+				}
+				if (j == 1) {
+					WaitTimer(500);
+					if (network->signUp(mail, pass, name)) {
+						j = network->getid();
+						while (j == 0 && ProcessMessage() == 0) {
+							j = network->getid();
+							time++;
+							if (time > 600)j = -3;
+							fps.controlWaitFps();
 						}
-						if (network->Extension == 1)
-						{
-							yetq = 0;
-							questionnaire = 0;
 
-							qtime++;
+						if (j > 0) {
+							break;
 						}
-
-						if (network->Extension ==-1 && network->sendyotubecommand == 0)
-						{
-							network->sendyotubecommand = 2;
+						else {
+							if (j == -2)return -1;
+							if (j == -3)return -2;
+							return 0;
 						}
 					}
-					else
-					{
-						if (yetq == 0)ui->drawStringToBox(yotubebox, "ƒAƒ“ƒP[ƒgI—¹‚Ü‚Å‚ ‚Æ : " + std::to_string((network->PlayStartTime + (t_limitenquetegettime * qtime)) - timer), 20, 114 + 90, font);
-						else ui->drawStringToBox(yotubebox, "ƒAƒ“ƒP[ƒgWŒv‚Ü‚Å‚ ‚Æ : " + std::to_string((network->PlayStartTime + (t_limitenquetegettime * qtime)) - timer), 20, 114 + 90, font);
-
-						if (network->Extension != -1)network->Extension = -1;
+					else {
+						ui.activateInputBox(input);
+						ui.setInputString(input, ""), warning = 1;
 					}
 				}
 			}
+			else ui.activateInputBox(input), ui.setInputString(input, ""), warning = 1;
 		}
+
+		if (warning) {
+			ui.drawString(font, u8"åå‰ã‚’æ­£ã—ãå…¥åŠ›ã—ã¦ãã ã•ã„", 640, 250, 1, GetColor(237, 28, 36));
+		}
+
+		fps.displayFps(1280 - 20, 0);
+		fps.measureFps();
+	}
+
+	return 1;
+}
+
+bool Scene::illegalChara(std::string str)
+{
+	if (str == "")return 0;
+
+	int c = 0;
+	for (int i = 0; i < str.size(); i++) {
+		if (str[i] == '@')c++;
+	}
+	if (c > 1)return 0;
+
+	//æ­£è¦è¡¨ç¾
+	std::regex  re(u8"^[0-9A-Za-z]+@*.*_*-*$");
+
+	if (std::regex_match(str, re) == 0) {
+		return 0;
+	}
+	return 1;
+}
+
+bool Scene::Specialsymbol(std::string str)
+{
+	if (str == "")return 0;
+	//æ­£è¦è¡¨ç¾
+	std::regex  re(u8"^'*$");
+
+	if (std::regex_match(str, re) != 0) {
+		return 0;
+	}
+	return 1;
+}
+bool Scene::Invalidname(std::string str)
+{
+	//ä½¿ç”¨ç¦æ­¢ã®åå‰
+	if (str.find(u8"ã¾ã‚“ã“") != string::npos)return 0;
+
+	return 1;
+}
+
+void Scene::loading()
+{
+	do {
+
+		ui.drawBackgroundImage();
+
+		ui.drawString(font2, u8"ãƒ­ãƒ¼ãƒ‰ä¸­ã§ã™â€¦", 640, 200, 1);
+
+		fps.displayFps(1280 - 20, 0);
+		fps.measureFps();
+	} while (ProcessMessage() == 0 && GetASyncLoadNum() != 0);
+}
+
+bool Scene::chat()
+{
+	if (network->getChatMassegeSize() > 0)
+	{
+		chatmessege.push_back(network->getChatMassege());
+	}
+
+	if (!load)
+	{
+		chatbox = ui.makeBoxRoundedBar(600, 200, 340, 510, GetColor(175, 175, 175), 13882323, 36);
+		chatinputbox = ui.makeInputBox(300, 30, GetColor(175, 175, 175), 60, "", 1);
+		sousin = ui.makeButton(u8"é€ä¿¡", font);
+		load = 1;
+	}
+
+	ui.updateBox(chatbox);
+	ui.updateSize(chatbox, 100, 50, GetColor(175, 175, 175), 13882323, 36);
+	ui.drawBox(chatbox, 186);
+
+	ui.drawStringToBox(chatbox, u8"ã‚³ãƒ¡ãƒ³ãƒˆ", ui.getBoxWidth(chatbox) / 2, 2, font, 1);
+
+	if (ui.getBoxWidth(chatbox) - 100 > 100)ui.changeBoxRounded(chatinputbox, ui.getBoxWidth(chatbox) - 100, 30);
+
+	ui.drawInputBoxToBox(chatbox, chatinputbox, 20, ui.getBoxHeight(chatbox) - 40, font, 128);
+
+
+	ui.drawButtonToBox(chatbox, sousin, 70, 45, 72, 1);
+
+	if (ui.updateInputBox(chatinputbox, messe) == 1 || ui.updateButton(sousin) == 1)
+	{
+		messe = ui.getInputString(chatinputbox);
+
+		if (messe != "") {
+			if (network->sendChat(messe) != -1)chatmessege.push_back(network->getname() + " : " + messe);
+		}
+
+		ui.setInputString(chatinputbox, "");
+	}
+
+	int scroll = ui.updateScroll(chatbox, 30);
+
+	int max = ui.getBoxHeight(chatbox) / 20 - 4;
+	if (max < 0)
+	{
+		max = chatmessege.size();
+		scroll = 0;
+	}
+	else
+	{
+		if (max + scroll >= chatmessege.size())scroll = chatmessege.size() - max;
+		if (scroll < 0)max = chatmessege.size(), scroll = 0;
+		if (scroll == 0 && follow == 0)if (max <= chatmessege.size())scroll = chatmessege.size() - max, follow = 1;
+	}
+	for (int i = 0; i < max; i++)
+	{
+		ui.drawStringToBox(chatbox, chatmessege[i + scroll], 20, 24 + 18 * (i), font, 0, -1, 75);
+	}
+
+	if (ui.getNowActiveKeyI() == chatinputbox)inp = 1;
+	else inp = 0;
+	return inp;
+}
+
+void Scene::drawName()
+{	//è‡ªåˆ†ã®åå‰
+	//ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã«å¤‰æ›
+	VECTOR ahead = ConvWorldPosToScreenPos(VGet(network->cahara->getPos().x, network->cahara->getPos().y + 15.f, network->cahara->getPos().z));
+
+	ui.drawString(font, network->getname(), (int)ahead.x, (int)ahead.y, 1);
+
+	if (network->getid() == 3)ui.drawString(font, u8"ç®¡ç†äºº", (int)ahead.x, (int)ahead.y-25,1, GetColor(0,255,64));
+
+	//ä»–ç¤¾ã®åå‰
+	for (size_t i = 0; i < network->getMultiplayerSize(); i++)
+	{
+		unsigned char ID = network->players->getPlayerID(i);
+		VECTOR p = network->players->getPos(ID);
+
+		VECTOR pp = ConvWorldPosToScreenPos(VGet(p.x, p.y + 15.f, p.z));
+
+		ui.drawString(font, network->players->getName(ID), (int)pp.x, (int)pp.y, 1);
+	}
+}
+
+void Scene::tutorial()
+{
+	if (tutorialf)
+	{
+		if (!tutoriall) {
+			tutorialbox = ui.makeBoxRoundedBar(800, 450, 240, 35, GetColor(175, 175, 175), 13882323, 36);
+
+			tutoriall = 1;
+		}
+
+		ui.updateBox(tutorialbox);
+		ui.updateSize(tutorialbox, 800, 450, GetColor(175, 175, 175), 13882323, 36);
+		ui.drawBox(tutorialbox, 186);
+
+		ui.drawStringToBox(tutorialbox, u8"MikuMikuOpenWorld ã¸ã‚ˆã†ã“ãï¼\nã€€  æ“ä½œæ–¹æ³•ã‚’ã”èª¬æ˜ã„ãŸã—ã¾ã™", ui.getBoxWidth(tutorialbox) / 2, 50, font2, 1);
+
+		ui.drawStringToBox(tutorialbox, u8"è¦–ç‚¹æ“ä½œ : å³ã‚¯ãƒªãƒƒã‚¯+ãƒ‰ãƒ©ãƒƒã‚¯ã€€ãƒ›ã‚¤ãƒ¼ãƒ« \nã‚­ãƒ£ãƒ©æ“ä½œ : Wå‰é€² Så¾Œé€² Aå·¦ Då³\nå·¦Shift + W èµ°ã‚‹ã€€å·¦Shifté•·æŠ¼ã— + W ãƒ€ãƒƒã‚·ãƒ¥\n", ui.getBoxWidth(tutorialbox) / 2, 150, font, 1);
+
+		ui.drawStringToBox(tutorialbox, u8"ã‚³ãƒ¡ãƒ³ãƒˆé€ä¿¡ : ä¸‹ã®ã‚³ãƒ¡ãƒ³ãƒˆæ¬„ã®å…¥åŠ›æ¬„ã‚’ã‚¯ãƒªãƒƒã‚¯å¾Œ\nå…¥åŠ›ã—é€ä¿¡ãƒœã‚¿ãƒ³ã‹ã‚¨ãƒ³ã‚¿ãƒ¼ã‚­ãƒ¼ã‚’æŠ¼ã™", ui.getBoxWidth(tutorialbox) / 2, 250, font, 1);
+
+		ui.drawStringToBox(tutorialbox, u8"ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦æ“ä½œ : ã‚¿ãƒ–ã‚’ã‚¯ãƒªãƒƒã‚¯ã§ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ç§»å‹•\nå„ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä¸‹ã€å³ä¸‹ã€å³ã‚’ã‚¯ãƒªãƒƒã‚¯ã§ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºãŒå¤‰æ›´å¯", ui.getBoxWidth(tutorialbox) / 2, 320, font, 1);
+
+		ui.drawStringToBox(tutorialbox, u8"ä½•ã‹ã®ã‚­ãƒ¼ã‚’æŠ¼ã™ã¨ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã¯é–‰ã˜ã¾ã™", ui.getBoxWidth(tutorialbox) / 2, 400, font, 1);
+
+		if (CheckHitKeyAll() != 0)tutorialf = 0;
 	}
 }

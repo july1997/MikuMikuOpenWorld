@@ -1,17 +1,4 @@
-# MikuMikuOpenWorld β0.0.1<br>
-MikuMikuDanceを始めとするコンテンツにゲームに使えそうなものが多くあります。<br>
-そのような既存の素材を利用し、オープンワールドのゲームを作ろうというものです<br>
-<br>
-<br>
-・ダウンロード
-* [Cliant 0.0.1 (zip)](https://mikumikuopenworld.slack.com/files/U942K45TM/F9ATYK136/mikumikuopenworld.zip)
-
-
-・更新履歴
- 2018/02/19 0.0.1　アップロード
-
-
-[License (MIT)](https://github.com/july1997/MikuMikuOpenWorld/LICENSE.txt)
+MIT License
 
 Copyright (C) 2015-2018 july. All rights reserved.
 
@@ -32,4 +19,4 @@ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
 BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTW
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

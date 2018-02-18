@@ -1,53 +1,54 @@
 #pragma once
-#include "Movie.h"
 
-#include <vector>
+#include "DxLib.h"
 
-class Youtube : public Movie
+#include <string>
+
+class Youtube
 {
 public:
 	Youtube();
 	~Youtube();
 
-	//URLから動画をダウンロードして再生する　戻り値:1 成功
-	int playYotubeMovie(std::string &VideoURL);
+	//URLから動画をダウンロードして再生する　戻り値:0　終了
+	size_t downloadmovie(std::string VideoURL);
 
-	//＊カメラの設定が初期化されます
-	void updateYotubeMovie();
+	//再生を開始
+	void playMovie();
 
-	//ModelHandelのScreenTexture(テクスチャ番号)に動画を再生するための準備
-	void setScreen(const int &ModelHandel, const int ScreenTexture);
+	//画面の更新
+	void update();
 
-	//再生を一時停止する
-	void pauseYotubeMovie();
+	//再生を一時停止、再開する
+	void pause();
 
-	//再生を再開する
-	void playYotubeMovie();
+	//再生位置を変更する
+	void seek(int time);
+	
+	//再生位置を得る
+	int getSeek();
+
+	//yotude-dlの更新
+	bool upgrade();
 
 private:
 
-	size_t timer = 0;
-	bool deleteProcessflag = 0, deleteCacheflag = 0, file = 0, downloadmovieflag = 0, moviefile = 0;
-	struct stat buf;
-	bool deleteProcess();
-	bool deleteCache();
-	bool downloadmovie(std::string &VideoURL);
-	int step = 0;
-	int loadinig;
-	int looptime = 0, looptime2 = 0;
-
-	int movieflag = 0;
-
 	int screen_handel;
 
-	HANDLE hHandle;
+	size_t downloadmovieflag = 3;
+	size_t timer = 0;
+	bool deleteCacheflag = 0, upgradeflag = 0;
+	struct stat buf;
+
+	void deleteProcess();
+	bool deleteCache();
+
+	std::string exe;
+	std::string path;
 
 	void yotube_dl(const char *exe, const char *word);
 
-	std::vector<int> screen_tex;
-	std::vector<int> model_handel;
-
-	int GraHandle;
-
+	DWORD dwD;
+	HANDLE hHandle;
 };
 

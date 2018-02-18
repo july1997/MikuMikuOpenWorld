@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "btBulletDynamicsCommon.h"
 
 #include "BulletDynamics/Character/btKinematicCharacterController.h"
@@ -7,21 +7,22 @@
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 #include "BulletSoftBody/btSoftBodyHelpers.h"
+#include "BulletCollision/Gimpact/btGImpactShape.h"
+#include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
+#include "BulletCollision/CollisionShapes/btConvexHullShape.h"
 
 
-//ƒvƒ‰ƒOƒ}éŒ¾ƒŠƒ“ƒJ
-#pragma comment( lib, "BulletCollision.lib" )
-#pragma comment( lib, "BulletDynamics.lib" )
-#pragma comment( lib, "BulletSoftBody.lib" )
-#pragma comment( lib, "LinearMath.lib" )
-
-//obj“Ç‚İ‚İ
-#include "rx_model.h"
-
+//ãƒ—ãƒ©ã‚°ãƒå®£è¨€ãƒªãƒ³ã‚«
 #ifdef _DEBUG
-#pragma comment (lib, "rx_modeld.lib")
+#pragma comment( lib, "BulletCollision_vs2010_x64_debug.lib" )
+#pragma comment( lib, "BulletDynamics_vs2010_x64_debug.lib" )
+#pragma comment( lib, "BulletSoftBody_vs2010_x64_debug.lib" )
+#pragma comment( lib, "LinearMath_vs2010_x64_debug.lib" )
 #else
-#pragma comment (lib, "rx_model.lib")
+#pragma comment( lib, "BulletCollision_vs2010_x64_release.lib" )
+#pragma comment( lib, "BulletDynamics_vs2010_x64_release.lib" )
+#pragma comment( lib, "BulletSoftBody_vs2010_x64_release.lib" )
+#pragma comment( lib, "LinearMath_vs2010_x64_release.lib" )
 #endif
 
 
@@ -34,48 +35,59 @@
 class Bullet_physics
 {
 public:
-	//ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+	//ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	Bullet_physics();
-	//ƒfƒXƒgƒ‰ƒNƒ^
+	//ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 	~Bullet_physics();
 
-	//ƒ_ƒCƒiƒ~ƒNƒXƒ[ƒ‹ƒh‚ğì¬‚µ‚Ü‚· CreateWorld(ƒ[ƒ‹ƒhL‚³iÅ¬j,ƒ[ƒ‹ƒhL‚³iÅ‘åj,ƒvƒƒLƒV‚ÌÅ‘å”Ad—Í)@–ß‚è’lFƒ[ƒ‹ƒhƒnƒ“ƒhƒ‹
+	//ãƒ€ã‚¤ãƒŠãƒŸã‚¯ã‚¹ãƒ¯ãƒ¼ãƒ«ãƒ‰ã‚’ä½œæˆã—ã¾ã™ CreateWorld(ãƒ¯ãƒ¼ãƒ«ãƒ‰åºƒã•ï¼ˆæœ€å°ï¼‰,ãƒ¯ãƒ¼ãƒ«ãƒ‰åºƒã•ï¼ˆæœ€å¤§ï¼‰,ãƒ—ãƒ­ã‚­ã‚·ã®æœ€å¤§æ•°ã€é‡åŠ›)ã€€æˆ»ã‚Šå€¤ï¼šãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒãƒ³ãƒ‰ãƒ«
 	int createWorld(VECTOR WorldMin = VGet(-10000.f, -10000.f, -10000.f), VECTOR WorldMax = VGet(10000.f, 10000.f, 10000.f), int maxProxies = 1024, VECTOR Gravity = VGet(0, -9.8f, 0));
 
-	//ì¬‚µ‚½ƒ_ƒCƒiƒ~ƒNƒXƒ[ƒ‹ƒh‚Ì”‚ğæ“¾‚µ‚Ü‚·
+	//ä½œæˆã—ãŸãƒ€ã‚¤ãƒŠãƒŸã‚¯ã‚¹ãƒ¯ãƒ¼ãƒ«ãƒ‰ã®æ•°ã‚’å–å¾—ã—ã¾ã™
 	int getWorldNun();
 
-	//ƒ[ƒ‹ƒh‚Éƒ‚ƒfƒ‹ƒf[ƒ^‚©‚ç’n–Ê‚ğì¬‚ğ‚µ‚Ü‚· –ß‚è’lF„‘Ì‚Ìƒnƒ“ƒhƒ‹
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰åœ°é¢ã‚’ä½œæˆã‚’ã—ã¾ã™ æˆ»ã‚Šå€¤ï¼šå‰›ä½“ã®ãƒãƒ³ãƒ‰ãƒ«
 	int createGroundBodytoMesh(int ModelHandel, int WorldHandle);
 
-	//ì¬‚µ‚½„‘Ì‚Ì”‚ğæ“¾‚µ‚Ü‚·
+	//ä½œæˆã—ãŸå‰›ä½“ã®æ•°ã‚’å–å¾—ã—ã¾ã™
 	int getBodyNun();
 
-	//ƒ[ƒ‹ƒh‚É” ‚ğì¬‚µ‚Ü‚· CreateBoxBody(ƒ[ƒ‹ƒhƒnƒ“ƒhƒ‹,ì‚è‚½‚¢” ‚Ì”¼•ª‚Ì‘å‚«‚³i” ‚Ì’†S‚©‚çj,À•W,‰ñ“]’l,¿—Ê(kg),Šµ«) –ß‚è’lF„‘Ì‚Ìƒnƒ“ƒhƒ‹
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ç®±ã‚’ä½œæˆã—ã¾ã™ CreateBoxBody(ãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒãƒ³ãƒ‰ãƒ«,ä½œã‚ŠãŸã„ç®±ã®åŠåˆ†ã®å¤§ãã•ï¼ˆç®±ã®ä¸­å¿ƒã‹ã‚‰ï¼‰,åº§æ¨™,å›è»¢å€¤,è³ªé‡(kg),æ…£æ€§) æˆ»ã‚Šå€¤ï¼šå‰›ä½“ã®ãƒãƒ³ãƒ‰ãƒ«
 	int createBoxBody(int WorldHandle, VECTOR boxHalfExtents, VECTOR pos = VGet(0.f, 0.f, 0.f), VECTOR rot = VGet(0.f, 0.f, 0.f), float mass = 1, VECTOR inertia = VGet(0.f, 0.f, 0.f));
 
-	//„‘Ì‚ÌÀ•W‚ğæ“¾‚µ‚Ü‚·
+	//å‰›ä½“ã®åº§æ¨™ã‚’å–å¾—ã—ã¾ã™
 	VECTOR getBodyPos(int BodyHandel, VECTOR subtractVC = VGet(0, 0, 0));
-	//„‘Ì‚Ì‰ñ“]‚ğæ“¾‚µ‚Ü‚·
+	//å‰›ä½“ã®å›è»¢ã‚’å–å¾—ã—ã¾ã™
 	VECTOR getBodyRot(int BodyHandel);
 
-	//ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ“ŠÔ‚ği‚ß‚Ü‚·
+	//ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³æ™‚é–“ã‚’é€²ã‚ã¾ã™
 	void stepSimulation(int WorldHandle, float fps=60.f);
 
-	//ƒ[ƒ‹ƒh‚É‹…‘Ì‚ğì¬‚µ‚Ü‚· ceateSphereBody(ƒ[ƒ‹ƒhƒnƒ“ƒhƒ‹,”¼Œa,À•W,‰ñ“]’l,¿—Ê(kg),Šµ«) –ß‚è’lF„‘Ì‚Ìƒnƒ“ƒhƒ‹
-	int ceateSphereBody(int WorldHandle, float radius, VECTOR pos = VGet(0.f, 0.f, 0.f), VECTOR rot = VGet(0.f, 0.f, 0.f), float mass = 1, VECTOR inertia = VGet(0.f, 0.f, 0.f));
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«çƒä½“ã‚’ä½œæˆã—ã¾ã™ ceateSphereBody(ãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒãƒ³ãƒ‰ãƒ«,åŠå¾„,åº§æ¨™,å›è»¢å€¤,è³ªé‡(kg),æ…£æ€§) æˆ»ã‚Šå€¤ï¼šå‰›ä½“ã®ãƒãƒ³ãƒ‰ãƒ«
+	int createSphereBody(int WorldHandle, float radius, VECTOR pos = VGet(0.f, 0.f, 0.f), VECTOR rot = VGet(0.f, 0.f, 0.f), float mass = 1, VECTOR inertia = VGet(0.f, 0.f, 0.f));
 
-	//broadphase‚ğæ“¾
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰å‰›ä½“ã‚’ä½œæˆã‚’ã—ã¾ã™ã€‚ã‚ã¨ã‹ã‚‰æ‹¡å¤§ã§ãã¾ã›ã‚“ã”æ³¨æ„ãã ã•ã„ã€‚æˆ»ã‚Šå€¤ï¼šå‰›ä½“ã®ãƒãƒ³ãƒ‰ãƒ«
+	int createBodytoMesh(int DXLibeModelHandel, int WorldHandle, VECTOR pos = VGet(0.f, 0.f, 0.f), VECTOR rot = VGet(0.f, 0.f, 0.f), float mass = 1, VECTOR inertia = VGet(0.f, 0.f, 0.f));
+
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰å‰›ä½“ã‚’ä½œæˆã‚’ã—ã¾ã™ã€‚ã‚ã¨ã‹ã‚‰æ‹¡å¤§ã§ãã¾ã›ã‚“ã”æ³¨æ„ãã ã•ã„ã€‚æˆ»ã‚Šå€¤ï¼šå‰›ä½“ã®ãƒãƒ³ãƒ‰ãƒ«
+	int createBodytoMesh2(int DXLibeModelHandel, int WorldHandle, VECTOR pos = VGet(0.f, 0.f, 0.f), VECTOR rot = VGet(0.f, 0.f, 0.f), float mass = 1, VECTOR inertia = VGet(0.f, 0.f, 0.f));
+
+	//å‰›ä½“ã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰ã‹ã‚‰å‰Šé™¤ã—ã¾ã™
+	int removeRigidBody(int WorldHandle, int BodyHandel);
+
+	//btDiscreteDynamicsWorldã‚’å–å¾—
+	btDiscreteDynamicsWorld* getWorld(int WorldHandel);
+	//broadphaseã‚’å–å¾—
 	btAxisSweep3* getBroadphase(int WorldHandel);
-	//ƒ[ƒ‹ƒh‚ğæ“¾
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰ã‚’å–å¾—
 	btDiscreteDynamicsWorld* getbtDiscreteDynamicsWorld(int WorldHandel);
-	//btRigidBody‚ğæ“¾
+	//btRigidBodyã‚’å–å¾—
 	btRigidBody* getbtRigidBody(int BodyHandel);
 
 
-	//Ô—¼Œn--------------------------------------------------------------------------
+	//è»Šä¸¡ç³»--------------------------------------------------------------------------
 
-	//Ô—¼(4—Ö)‚ğì¬‚µ‚Ü‚·
+	//è»Šä¸¡(4è¼ª)ã‚’ä½œæˆã—ã¾ã™
 	int createCar(int *CarBodyHandel, int WorldHandle, VECTOR boxHalfExtents, VECTOR pos, float mass,
 		VECTOR rot = VGet(0, 0, 0), float wheelFriction = 3.5f, float wheelWidth = 1.5f,
 		float wheelRadius = 4.25f, float suspensionStiffness = 40.f, float suspensionDamping = 4.3f,
@@ -83,77 +95,79 @@ public:
 		VECTOR Gravity = VGet(0, -100.f, 0), VECTOR wheelDirectionCS0 = VGet(0, -1, 0),
 		VECTOR wheelAxleCS = VGet(1, 0, 0), float suspensionRestLength = 6.f);
 
-	//Ô‚Ì‘€ì‚ğ‚µ‚Ü‚·
+	//è»Šã®æ“ä½œã‚’ã—ã¾ã™
 	void controlCar(int CarHandel, float gEngineForce, float gBreakingForce, float gVehicleSteering);
 
-	//Ô‚ÌƒzƒC[ƒ‹‚ğ“®‚©‚µ‚Ü‚·
+	//è»Šã®ãƒ›ã‚¤ãƒ¼ãƒ«ã‚’å‹•ã‹ã—ã¾ã™
 	void controlWheel(int CarHandel, int CarModelHandel, int frameFL, int frameFR, int frameRL, int frameRR);
 
-	//btRaycastVehicle‚ğæ“¾
+	//btRaycastVehicleã‚’å–å¾—
 	btRaycastVehicle* getbtRaycastVehicle(int CarHandel);
 
 
 
 
-	//ƒLƒƒƒ‰ƒNƒ^[Œn---------------------------------------------------------------------
+	//ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ç³»---------------------------------------------------------------------
 
-	//ƒLƒƒƒ‰ƒNƒ^[‚ğì¬‚µ‚Ü‚·
+	//ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’ä½œæˆã—ã¾ã™
 	int createCharacter(int WorldHandle, VECTOR pos, float stepHeight=0.35f, float characterHeight = 16.f, float characterWidth = 2.f);
 
-	//ƒvƒŒ[ƒ„[‚Ì‘€ì‚ğ‚µ‚Ü‚·
-	void controlCharacter(int CharacterHandel, int Left, int Right, int Forward, int Backward, int Jump, float walkspeed = 1.4f);
+	//ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼ã®æ“ä½œã‚’ã—ã¾ã™
+	btVector3 controlCharacter(int CharacterHandel, int Left, int Right, int Forward, int Backward, int Jump, float walkspeed = 1.4f, float TurningSpeed = 0.03);
 
-	//btPairCachingGhostObject‚Ìæ“¾
+	//btPairCachingGhostObjectã®å–å¾—
 	btPairCachingGhostObject* getbtGhostObject(int CaracterHandel);
-	//btKinematicCharacterController‚Ìæ“¾
+	//btKinematicCharacterControllerã®å–å¾—
 	btKinematicCharacterController* getCharacterController(int CaracterHandel);
 
-	//ƒLƒƒƒ‰ƒNƒ^[‚ÌÀ•W‚ğæ“¾‚µ‚Ü‚·
+	//ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®åº§æ¨™ã‚’å–å¾—ã—ã¾ã™
 	VECTOR getCharacterPos(int CaracterHandel, VECTOR subtractVC= VGet(0,0,0));
-	//ƒLƒƒƒ‰ƒNƒ^[‚Ì‰ñ“]‚ğæ“¾‚µ‚Ü‚·
+	//ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®å›è»¢ã‚’å–å¾—ã—ã¾ã™
 	VECTOR getCharacterRot(int CaracterHandel);
 
-	//ƒLƒƒƒ‰ƒNƒ^[‚ÌÀ•W‚Æ‰ñ“]‚ğİ’è‚µ‚Ü‚·
+	//ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®åº§æ¨™ã¨å›è»¢ã‚’è¨­å®šã—ã¾ã™
 	void setCharacterPosRot(int CaracterHandel, VECTOR pos, btQuaternion &rot);
 	int pretendCreateCharacter();
-	//btQuaternion‚Ìæ“¾
+	//btQuaternionã®å–å¾—
 	btQuaternion getCharacterRotRaw(int CaracterHandel);
 
+	//ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼ã®æ—‹å›æ–¹å‘ã‚’æŒ‡å®š
+	void setCharacterTurningSpeed(int CharacterHandel, FLOAT dir);
 
-	//ƒ\ƒtƒgƒ{ƒfƒBŒn---------------------------------------------------------------------
+	//ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼ã®æ–¹å‘ã‚’è¨­å®š
+	void setCharacterDirection(int CharacterHandel,btVector3 dir);
 
-	//ƒ\ƒtƒgƒ{ƒfƒB‚ğˆµ‚¤ƒ[ƒ‹ƒh‚ğì¬‚µ‚Ü‚· CreateSoftWorld(ƒ[ƒ‹ƒhL‚³iÅ¬j,ƒ[ƒ‹ƒhL‚³iÅ‘åj,ƒvƒƒLƒV‚ÌÅ‘å”Ad—Í)@–ß‚è’lFƒ[ƒ‹ƒhƒnƒ“ƒhƒ‹
+	//ã‚½ãƒ•ãƒˆãƒœãƒ‡ã‚£ç³»---------------------------------------------------------------------
+
+	//ã‚½ãƒ•ãƒˆãƒœãƒ‡ã‚£ã‚’æ‰±ã†ãƒ¯ãƒ¼ãƒ«ãƒ‰ã‚’ä½œæˆã—ã¾ã™ CreateSoftWorld(ãƒ¯ãƒ¼ãƒ«ãƒ‰åºƒã•ï¼ˆæœ€å°ï¼‰,ãƒ¯ãƒ¼ãƒ«ãƒ‰åºƒã•ï¼ˆæœ€å¤§ï¼‰,ãƒ—ãƒ­ã‚­ã‚·ã®æœ€å¤§æ•°ã€é‡åŠ›)ã€€æˆ»ã‚Šå€¤ï¼šãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒãƒ³ãƒ‰ãƒ«
 	int createSoftWorld(VECTOR WorldMin = VGet(-10000.f, -10000.f, -10000.f), VECTOR WorldMax = VGet(10000.f, 10000.f, 10000.f), int maxProxies = 1024, VECTOR Gravity = VGet(0, -10.f, 0));
 
-	//ƒ\ƒtƒgƒ{ƒfƒB‚Ì” ‚Ìì¬
+	//ã‚½ãƒ•ãƒˆãƒœãƒ‡ã‚£ã®ç®±ã®ä½œæˆ
 	int createSoftBox(int SoftWorldHandle);
 
-	//btSoftRigidDynamicsWorld‚Ìæ“¾
+	//btSoftRigidDynamicsWorldã®å–å¾—
 	btSoftRigidDynamicsWorld* getbtSoftRigidDynamicsWorld(int WorldHandel);
-	//btSoftBody‚Ìæ“¾
+	//btSoftBodyã®å–å¾—
 	btSoftBody* getbtSoftBody(int SoftBodyHandel);
 
-	//ƒ\ƒtƒgƒ{ƒfƒB‚ğˆµ‚¤ƒ[ƒ‹ƒh‚É¡Œã„‘Ì‚ğ’Ç‰Á‚·‚é‚©‚µ‚È‚¢‚©(ƒ\ƒtƒgƒ[ƒ‹ƒh‚ğì‚é‚Æ©“®‚ÅON)
+	//ã‚½ãƒ•ãƒˆãƒœãƒ‡ã‚£ã‚’æ‰±ã†ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ä»Šå¾Œå‰›ä½“ã‚’è¿½åŠ ã™ã‚‹ã‹ã—ãªã„ã‹(ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã‚’ä½œã‚‹ã¨è‡ªå‹•ã§ON)
 	void useSoftWorld(bool Flag);
 
 	int createSoftSphere(int SoftWorldHandle);
 
-	//ƒ‚ƒfƒ‹ƒf[ƒ^‚©‚çsoftbody‚ğì¬‚µ‚Ü‚· ƒƒbƒVƒ…‚ÍŠÈˆÕ‰»‚³‚ê‚Ü‚·
+	//ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰softbodyã‚’ä½œæˆã—ã¾ã™ ãƒ¡ãƒƒã‚·ãƒ¥ã¯ç°¡æ˜“åŒ–ã•ã‚Œã¾ã™
 	int createSoftBodyConvexHull(int ModelHandel, int SoftWorldHandle);
 
-	//objƒtƒ@ƒCƒ‹‚©‚çsoftbody‚ğì¬‚µ‚Ü‚·@http://slis.tsukuba.ac.jp/~fujisawa.makoto.fu/ —l‚Ìƒ‚ƒfƒ‹“Ç‚İ‚İƒ‰ƒCƒuƒ‰‚ğg—p
-	int createSoftBodyFromTriMesh(char *FileName, int SoftWorldHandle, VECTOR Scale = VGet(1.f, 1.f, 1.f), VECTOR Pos = VGet(0.f, 0.f, 0.f), VECTOR Rot = VGet(0.f, 0.f, 0.f),float mass=1);
-
-	//„‘Ì‚Æƒ\ƒtƒgƒ{ƒfƒB‚ğ‚Â‚È‚®ƒAƒ“ƒJ[‚ğ’Ç‰Á‚µ‚Ü‚·
+	//å‰›ä½“ã¨ã‚½ãƒ•ãƒˆãƒœãƒ‡ã‚£ã‚’ã¤ãªãã‚¢ãƒ³ã‚«ãƒ¼ã‚’è¿½åŠ ã—ã¾ã™
 	void addAnchor(int SoftBodyHandel,int node, int RigidBodyHandel, bool InvalidCollision = FALSE, float influence = 1.f);
 
 
-	//•Ö—˜‹@”\
-	//VECTOR ‚ğ btVector3 ‚É•ÏŠ·
+	//ä¾¿åˆ©æ©Ÿèƒ½
+	//VECTOR ã‚’ btVector3 ã«å¤‰æ›
 	btVector3 btvDxv(const VECTOR &inv){ return btVector3(inv.x, inv.y, inv.z); }
-	//btVctor3 ‚ğ VECTOR ‚É•ÏŠ·
+	//btVctor3 ã‚’ VECTOR ã«å¤‰æ›
 	VECTOR btVGet(const btVector3 &inv){ return VGet(inv.getX(), inv.getY(), inv.getZ()); }
-	//VECTOR ‚ğ dxƒ‰ƒCƒuƒ‰ƒŠ‚Ì‰ñ“]’l ‚É•ÏŠ·
+	//VECTOR ã‚’ dxãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®å›è»¢å€¤ ã«å¤‰æ›
 	VECTOR VGetRot(const VECTOR &inv){ return VGet(-inv.x, -inv.y, inv.z); }
 
 private:
@@ -165,7 +179,7 @@ private:
 	int CharacterHandel = -1;
 	int SoftWorldHandel = -1;
 
-	//—v‘f‚ğ’Ç‰Á‚·‚é‚½‚ß‚Éstd::vector‚ğg‚¤
+	//è¦ç´ ã‚’è¿½åŠ ã™ã‚‹ãŸã‚ã«std::vectorã‚’ä½¿ã†
 	std::vector<btDiscreteDynamicsWorld *> dynamicsWorld;
 	std::vector<btSoftRigidDynamicsWorld *> softWorld;
 	std::vector<btAxisSweep3 *> broadphase;

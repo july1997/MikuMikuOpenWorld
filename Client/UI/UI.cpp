@@ -1,9 +1,9 @@
-#include "UI.h"
+ï»¿#include "UI.h"
 
 #include "DxLib.h"
 
 
-void UI::drawBackground(char *Picture)
+void UI::loadBackgroundImage(const char *Picture)
 {
 	if (!loadBackground)
 	{
@@ -11,18 +11,26 @@ void UI::drawBackground(char *Picture)
 
 		loadBackground = 1;
 	}
+	else
+	{
+		DeleteGraph(Background);
 
-	DrawExtendGraph(0, 0,1280,720, Background, FALSE);
+		Background = LoadGraph(Picture);
+	}
 }
 
+void UI::drawBackgroundImage()
+{
+	DrawExtendGraph(0, 0, 1280, 720, Background, FALSE);
+}
 
 int UI::makeBoxRoundedBar(int XLength, int YLength, int EarlyX, int EarlyY, int Color, int BarColor, int Barhigh, int EdgeSize, int AntiAliasing, int Margin)
 {
 	int dboxnun = 0; bool del = 0;
 	if (DeletedBox.size() > 0)
 	{
-		dboxnun = DeletedBox[DeletedBox.size()-1];
-		//íœ
+		dboxnun = DeletedBox[DeletedBox.size() - 1];
+		//å‰Šé™¤
 		DeletedBox.pop_back();
 
 		del = 1;
@@ -34,6 +42,7 @@ int UI::makeBoxRoundedBar(int XLength, int YLength, int EarlyX, int EarlyY, int 
 		ButtonString[dboxnun] = "";
 
 		InputHandle[dboxnun] = 0;
+		CloseInput[dboxnun] = -1;
 
 		CrickX[dboxnun] = 0;
 		CrickY[dboxnun] = 0;
@@ -57,6 +66,7 @@ int UI::makeBoxRoundedBar(int XLength, int YLength, int EarlyX, int EarlyY, int 
 		ButtonString.push_back("");
 
 		InputHandle.push_back(0);
+		CloseInput.push_back(-1);
 
 		CrickX.push_back(0);
 		CrickY.push_back(0);
@@ -88,7 +98,7 @@ int UI::makeBoxRoundedBar(int XLength, int YLength, int EarlyX, int EarlyY, int 
 
 	DrawCircle(Margin + aXLength - EdgeSize, Margin + aYLength - EdgeSize, EdgeSize, Color, TRUE);
 
-	SetDrawBlendMode(DX_BLENDMODE_MULA,255);
+	SetDrawBlendMode(DX_BLENDMODE_MULA, 255);
 
 	DrawBox(Margin, Margin, Margin + aXLength + 2, Margin + Barhigh + 2, BarColor, TRUE);
 
@@ -137,7 +147,7 @@ int UI::makeBoxRounded(int XLength, int YLength, int Color, int EarlyX, int Earl
 	if (DeletedBox.size() > 0)
 	{
 		dboxnun = DeletedBox[DeletedBox.size() - 1];
-		//íœ
+		//å‰Šé™¤
 		DeletedBox.pop_back();
 
 		del = 1;
@@ -149,6 +159,7 @@ int UI::makeBoxRounded(int XLength, int YLength, int Color, int EarlyX, int Earl
 		ButtonString[dboxnun] = "";
 
 		InputHandle[dboxnun] = 0;
+		CloseInput[dboxnun] = -1;
 
 		CrickX[dboxnun] = 0;
 		CrickY[dboxnun] = 0;
@@ -172,6 +183,7 @@ int UI::makeBoxRounded(int XLength, int YLength, int Color, int EarlyX, int Earl
 		ButtonString.push_back("");
 
 		InputHandle.push_back(0);
+		CloseInput.push_back(-1);
 
 		CrickX.push_back(0);
 		CrickY.push_back(0);
@@ -310,13 +322,13 @@ void UI::changeBoxRoundedBar(int BoxHandel, int XLength, int YLength, int Color,
 
 	DrawCircle(Margin + aXLength - EdgeSize, Margin + aYLength - EdgeSize, EdgeSize, Color, TRUE);
 
-	SetDrawBlendMode(DX_BLENDMODE_MULA,255);
+	SetDrawBlendMode(DX_BLENDMODE_MULA, 255);
 
 	DrawBox(Margin, Margin, Margin + aXLength + 2, Margin + Barhigh + 2, BarColor, TRUE);
 
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 255);
 
-	Box[BoxHandel] = MakeScreen(XLength , YLength , TRUE);
+	Box[BoxHandel] = MakeScreen(XLength, YLength, TRUE);
 
 	SetDrawScreen(Box[BoxHandel]);
 
@@ -404,7 +416,7 @@ void UI::drawBox(int BoxHandel, int BlendRate)
 
 	if (BlendRate != 0)
 	{
-		SetDrawBlendMode(DX_BLENDMODE_NOBLEND,255);
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 255);
 	}
 }
 
@@ -412,16 +424,18 @@ void UI::updateBox(int BoxHandel)
 {
 	if (BarHigh[BoxHandel] != 0)
 	{
-		if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
-		{
-			int MouseX, MouseY;
-			// ƒ}ƒEƒX‚ÌˆÊ’u‚ğæ“¾
-			GetMousePoint(&MouseX, &MouseY);
+		int MouseX, MouseY;
+		// ãƒã‚¦ã‚¹ã®ä½ç½®ã‚’å–å¾—
+		GetMousePoint(&MouseX, &MouseY);
 
-			if (MouseX >= BoxX[BoxHandel] && MouseX <= BoxX[BoxHandel] + BoxXLength[BoxHandel])
+		if (MouseX >= BoxX[BoxHandel] && MouseX <= BoxX[BoxHandel] + BoxXLength[BoxHandel])
+		{
+			if (MouseY >= BoxY[BoxHandel] && MouseY <= BoxY[BoxHandel] + BarHigh[BoxHandel]/2)
 			{
-				if (MouseY >= BoxY[BoxHandel] && MouseY <= BoxY[BoxHandel] + BarHigh[BoxHandel])
-				{
+				//ã‚«ãƒ¼ã‚½ãƒ«ã‚’å¤‰æ›´
+				HCURSOR cur = SetCursor(LoadCursor(NULL, IDC_SIZEALL));
+
+				if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0) {
 					if (CrickX[BoxHandel] == 0 && CrickY[BoxHandel] == 0)
 					{
 						CrickX[BoxHandel] = MouseX;
@@ -431,7 +445,9 @@ void UI::updateBox(int BoxHandel)
 					}
 				}
 			}
+		}
 
+		if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0) {
 			if (OperationType[BoxHandel] == 1)
 			{
 				BoxX[BoxHandel] -= CrickX[BoxHandel] - MouseX;
@@ -445,7 +461,7 @@ void UI::updateBox(int BoxHandel)
 			if (BoxX[BoxHandel] + BoxXLength[BoxHandel] > 1280)BoxX[BoxHandel] = 1280 - BoxXLength[BoxHandel];
 			if (BoxY[BoxHandel] < 0)BoxY[BoxHandel] = 0;
 			if (BoxY[BoxHandel] + BoxYLength[BoxHandel] > 720)BoxY[BoxHandel] = 720 - BoxYLength[BoxHandel];
-			
+
 		}
 		else
 		{
@@ -464,16 +480,20 @@ void UI::updateSize(int BoxHandel, int MinimumValueX, int MinimumValueY, int Col
 {
 	if (BarHigh[BoxHandel] != 0)
 	{
-		if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
-		{
-			int MouseX, MouseY;
-			// ƒ}ƒEƒX‚ÌˆÊ’u‚ğæ“¾
-			GetMousePoint(&MouseX, &MouseY);
 
-			//‰E‰º
-			if (MouseX >= BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel] && MouseX <= BoxX[BoxHandel] + BoxXLength[BoxHandel])
+		int MouseX, MouseY;
+		// ãƒã‚¦ã‚¹ã®ä½ç½®ã‚’å–å¾—
+		GetMousePoint(&MouseX, &MouseY);
+
+		//å³ä¸‹
+		if (MouseX >= BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel] / 3 && MouseX <= BoxX[BoxHandel] + BoxXLength[BoxHandel])
+		{
+			if (MouseY >= BoxY[BoxHandel] + BoxYLength[BoxHandel] - BarHigh[BoxHandel] / 3 && MouseY <= BoxY[BoxHandel] + BoxYLength[BoxHandel])
 			{
-				if (MouseY >= BoxY[BoxHandel] + BoxYLength[BoxHandel] - BarHigh[BoxHandel] && MouseY <= BoxY[BoxHandel] + BoxYLength[BoxHandel])
+				//ã‚«ãƒ¼ã‚½ãƒ«ã‚’å¤‰æ›´
+				HCURSOR cur = SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+
+				if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
 				{
 					if (CrickX[BoxHandel] == 0 && CrickY[BoxHandel] == 0)
 					{
@@ -484,11 +504,12 @@ void UI::updateSize(int BoxHandel, int MinimumValueX, int MinimumValueY, int Col
 					}
 				}
 			}
-
-			//‰E
-			if (MouseX >= BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel] && MouseX <= BoxX[BoxHandel] + BoxXLength[BoxHandel])
+			else if (MouseY >= BoxY[BoxHandel] && MouseY <= BoxY[BoxHandel] + BoxYLength[BoxHandel])
 			{
-				if (MouseY >= BoxY[BoxHandel] && MouseY <= BoxY[BoxHandel] + BoxYLength[BoxHandel])
+				//ã‚«ãƒ¼ã‚½ãƒ«ã‚’å¤‰æ›´
+				HCURSOR cur = SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+
+				if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
 				{
 					if (CrickX[BoxHandel] == 0 && CrickY[BoxHandel] == 0)
 					{
@@ -499,22 +520,33 @@ void UI::updateSize(int BoxHandel, int MinimumValueX, int MinimumValueY, int Col
 					}
 				}
 			}
-
-			//‰º
+		}
+		else
+		{
+			//ä¸‹
 			if (MouseX >= BoxX[BoxHandel] && MouseX <= BoxX[BoxHandel] + BoxXLength[BoxHandel])
 			{
-				if (MouseY >= BoxY[BoxHandel] + BoxYLength[BoxHandel] - BarHigh[BoxHandel] && MouseY <= BoxY[BoxHandel] + BoxYLength[BoxHandel])
+				if (MouseY >= BoxY[BoxHandel] + BoxYLength[BoxHandel] - BarHigh[BoxHandel]/ 3 && MouseY <= BoxY[BoxHandel] + BoxYLength[BoxHandel])
 				{
 					if (CrickX[BoxHandel] == 0 && CrickY[BoxHandel] == 0)
 					{
-						CrickX[BoxHandel] = MouseX;
-						CrickY[BoxHandel] = MouseY;
+						//ã‚«ãƒ¼ã‚½ãƒ«ã‚’å¤‰æ›´
+						HCURSOR cur = SetCursor(LoadCursor(NULL, IDC_SIZENS));
 
-						OperationType[BoxHandel] = 3;
+						if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
+						{
+							CrickX[BoxHandel] = MouseX;
+							CrickY[BoxHandel] = MouseY;
+
+							OperationType[BoxHandel] = 3;
+						}
 					}
 				}
 			}
+		}
 
+		if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
+		{
 			switch (OperationType[BoxHandel])
 			{
 			case 2:
@@ -588,15 +620,15 @@ void UI::updateSize(int BoxHandel, int MinimumValueX, int MinimumValueY, int Col
 	}
 }
 
-int UI::updateScroll(int BoxHandel, int downlimit ,int ScrollBarColor)
+int UI::updateScroll(int BoxHandel, int downlimit, int ScrollBarColor)
 {
 	if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
 	{
 		int MouseX, MouseY;
-		// ƒ}ƒEƒX‚ÌˆÊ’u‚ğæ“¾
+		// ãƒã‚¦ã‚¹ã®ä½ç½®ã‚’å–å¾—
 		GetMousePoint(&MouseX, &MouseY);
 
-		if (MouseX >= BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel]*2 && MouseX < BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel])
+		if (MouseX >= BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel] * 2 && MouseX < BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel])
 		{
 			if (MouseY >= BoxY[BoxHandel] + BarHigh[BoxHandel] + 10 + ScrollValue[BoxHandel] && MouseY < BoxY[BoxHandel] + BarHigh[BoxHandel] * 2 + 15 + ScrollValue[BoxHandel])
 			{
@@ -613,7 +645,7 @@ int UI::updateScroll(int BoxHandel, int downlimit ,int ScrollBarColor)
 		if (OperationType[BoxHandel] == 5)
 		{
 			if ((CrickY[BoxHandel] - MouseY) == 0)
-			{ 
+			{
 				CrickX[BoxHandel] = MouseX;
 				CrickY[BoxHandel] = BoxY[BoxHandel] + BarHigh[BoxHandel] + 20;
 			}
@@ -637,14 +669,14 @@ int UI::updateScroll(int BoxHandel, int downlimit ,int ScrollBarColor)
 		}
 	}
 
-	if (BoxXLength[BoxHandel] > BoxXLength[BoxHandel] - BarHigh[BoxHandel] * 2 && BarHigh[BoxHandel]*2 + 15 + ScrollValue[BoxHandel] < BoxYLength[BoxHandel])
-		DrawBox(BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel]-15, BoxY[BoxHandel] + BarHigh[BoxHandel] + 10 + ScrollValue[BoxHandel],
-		BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel], BoxY[BoxHandel] + BarHigh[BoxHandel] * 2 + 15 + ScrollValue[BoxHandel], ScrollBarColor, TRUE);
+	if (BoxXLength[BoxHandel] > BoxXLength[BoxHandel] - BarHigh[BoxHandel] * 2 && BarHigh[BoxHandel] * 2 + 15 + ScrollValue[BoxHandel] < BoxYLength[BoxHandel])
+		DrawBox(BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel] - 15, BoxY[BoxHandel] + BarHigh[BoxHandel] + 10 + ScrollValue[BoxHandel],
+			BoxX[BoxHandel] + BoxXLength[BoxHandel] - BarHigh[BoxHandel], BoxY[BoxHandel] + BarHigh[BoxHandel] * 2 + 15 + ScrollValue[BoxHandel], ScrollBarColor, TRUE);
 
 	return ScrollValue[BoxHandel];
 }
 
-void UI::setScroll(int BoxHandel,int scroll)
+void UI::setScroll(int BoxHandel, int scroll)
 {
 	ScrollValue[BoxHandel] = scroll;
 }
@@ -661,10 +693,10 @@ int UI::getBoxWidth(int BoxHandel)
 
 void UI::deleteBox(int BoxHandel)
 {
-	//‰æ‘œ‚ğíœ
+	//ç”»åƒã‚’å‰Šé™¤
 	DeleteGraph(Box[BoxHandel]);
 
-	//íœ‚µ‚½ƒnƒ“ƒhƒ‹”Ô†‚ğ‹L‰¯
+	//å‰Šé™¤ã—ãŸãƒãƒ³ãƒ‰ãƒ«ç•ªå·ã‚’è¨˜æ†¶
 	DeletedBox.push_back(BoxHandel);
 }
 
@@ -674,15 +706,15 @@ void UI::drawStringToBox(int BoxHandel, std::string string, int InBoxX, int InBo
 	{
 		if (GetDrawFormatStringWidthToHandle(getFont(FontHandel), string.c_str()) < BoxXLength[BoxHandel] - WidthLimit)
 		{
-			//‰æ–Ê“à
-			drawString(BoxX[BoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, string, FontHandel, Center, Color);
+			//ç”»é¢å†…
+			drawString(FontHandel, string, BoxX[BoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, Center, Color);
 		}
 		else
 		{
-			//‰æ–ÊŠO
+			//ç”»é¢å¤–
 			int cs = 0;
 
-			//‚Í‚İo‚µ‚½•¶š‚ğ”‚¦‚é
+			//ã¯ã¿å‡ºã—ãŸæ–‡å­—ã‚’æ•°ãˆã‚‹
 			for (size_t i = 0; i < string.size(); i++)
 			{
 				if (i % 2 == 0)
@@ -695,20 +727,21 @@ void UI::drawStringToBox(int BoxHandel, std::string string, int InBoxX, int InBo
 				}
 			}
 
-			drawString(BoxX[BoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, string.substr(cs, string.size() - 1).c_str(), FontHandel, Center, Color);
+			drawString(FontHandel, string.substr(cs, string.size() - 1).c_str(), BoxX[BoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, Center, Color);
 		}
 	}
 }
 
 
-int UI::makeInputBox(int XLength, int YLength, int maxlengh, char *initString, bool cancancel)
+int UI::makeInputBox(int XLength, int YLength, int color, int maxlengh, const char *initString, bool cancancel, bool SingleOnly, bool NumOnly)
 {
-	int box = makeBoxRounded(XLength, YLength);
+	int box = makeBoxRounded(XLength, YLength, color);
 
-	InputHandle[box] = MakeKeyInput(maxlengh, cancancel, FALSE, FALSE);
-	
+	InputHandle[box] = MakeKeyInput(maxlengh, cancancel, SingleOnly, NumOnly);
+	CloseInput[box] = 0;
+
 	SetKeyInputString(initString, InputHandle[box]);
-	
+
 	return box;
 }
 
@@ -717,22 +750,38 @@ void UI::activateInputBox(int InputBoxHandel)
 	SetActiveKeyInput(InputHandle[InputBoxHandel]);
 
 	NowActiveKey = InputBoxHandel;
+	NowActiveKeyI = InputBoxHandel;
 }
 
-void UI::setInputString(int InputBoxHandel,char *setString)
+void UI::setInputString(int InputBoxHandel, const char *setString)
 {
 	SetKeyInputString(setString, InputHandle[InputBoxHandel]);
 }
 
-void UI::drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int InBoxY, int &FontHandel, int BlendRate, bool drawString, bool Relative)
+void UI::drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int InBoxY, int &FontHandel, int BlendRate, bool drawString, bool Relative,bool Asterisk)
 {
 	bool draw = 0;
+
+	/*
+	int MouseX, MouseY;
+	// ãƒã‚¦ã‚¹ã®ä½ç½®ã‚’å–å¾—
+	GetMousePoint(&MouseX, &MouseY);
+
+	if (MouseX >= BoxX[BoxHandel] + InBoxX && MouseX <= BoxX[BoxHandel] + InBoxX + BoxXLength[InputBoxHandel])
+	{
+		if (MouseY >= BoxY[BoxHandel] + InBoxY && MouseY <= BoxY[BoxHandel] + InBoxY + BoxYLength[InputBoxHandel])
+		{
+			//ã‚«ãƒ¼ã‚½ãƒ«ã‚’å¤‰æ›´
+			HCURSOR cur = SetCursor(LoadCursor(NULL, IDC_IBEAM));
+		}
+	}
+	*/
 
 	if (!Relative)
 	{
 		if (InBoxX < BoxXLength[BoxHandel] && InBoxY + BoxYLength[InputBoxHandel] < BoxYLength[BoxHandel])
 		{
-			drawBox(BoxX[BoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, InputBoxHandel, BlendRate);
+			drawBox(BoxX[BoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY-6, InputBoxHandel, BlendRate);
 
 			draw = 1;
 		}
@@ -741,7 +790,7 @@ void UI::drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int In
 	{
 		if (BoxXLength[BoxHandel] - InBoxX < BoxXLength[BoxHandel] && BoxYLength[BoxHandel] - InBoxY < BoxYLength[BoxHandel])
 		{
-			drawBox(BoxX[BoxHandel] + BoxXLength[BoxHandel] - InBoxX, BoxY[BoxHandel] + BoxYLength[BoxHandel] - InBoxY, InputBoxHandel, BlendRate);
+			drawBox(BoxX[BoxHandel] + BoxXLength[BoxHandel] - InBoxX, BoxY[BoxHandel] + BoxYLength[BoxHandel] - InBoxY-6, InputBoxHandel, BlendRate);
 
 			draw = 1;
 		}
@@ -752,49 +801,62 @@ void UI::drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int In
 		if (drawString)
 		{
 			char String[256];
+			std::string s;
 
-			// Œ»“_‚Å‚ÌŠm’è“ü—Í•¶š—ñ‚ğæ“¾‚·‚é
+			// ç¾æ™‚ç‚¹ã§ã®ç¢ºå®šå…¥åŠ›æ–‡å­—åˆ—ã‚’å–å¾—ã™ã‚‹
 			GetKeyInputString(String, InputHandle[InputBoxHandel]);
 
-			drawStringToBox(InputBoxHandel, String, 10, 5, FontHandel);
+			if (!Asterisk) {
+				drawStringToBox(InputBoxHandel, String, 10, 6, FontHandel);
+			}
+			else {
+				std::string s(String),ss;
+				for (int i = 0; i < s.length(); i++)ss.push_back('*');
+
+				drawStringToBox(InputBoxHandel, ss.c_str(), 10, 6, FontHandel);
+			}
+			
 
 			if (InputBoxHandel == NowActiveKey)
 			{
 				Flash++;
 
-				//ƒJ[ƒ\ƒ‹‚ÌˆÊ’u
+				//ã‚«ãƒ¼ã‚½ãƒ«ã®ä½ç½®
 				int CursorPos = GetKeyInputCursorPosition(InputHandle[InputBoxHandel]);
 
-				// ƒJ[ƒ\ƒ‹‚Ìƒhƒbƒg’PˆÊ‚ÌˆÊ’u‚ğæ“¾‚·‚é
-				int CursorDotPos = GetDrawStringWidth(String, CursorPos);
+				// ã‚«ãƒ¼ã‚½ãƒ«ã®ãƒ‰ãƒƒãƒˆå˜ä½ã®ä½ç½®ã‚’å–å¾—ã™ã‚‹
+				int CursorDotPos;
+				GetDrawStringSizeToHandle(&CursorDotPos, NULL, NULL, String, CursorPos, getFont(FontHandel));
 
-				// ‚h‚l‚d“ü—Íî•ñ‚ğæ“¾‚·‚é
+				// ï¼©ï¼­ï¼¥å…¥åŠ›æƒ…å ±ã‚’å–å¾—ã™ã‚‹
 				const IMEINPUTDATA *ImeData = GetIMEInputData();
 
-				// ‚h‚l‚d“ü—Íî•ñ‚ª‚ ‚é‚©‚Ç‚¤‚©(‚h‚l‚d“ü—Í‚ğ‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©)‚Åˆ—‚ğ•ªŠò
+				// ï¼©ï¼­ï¼¥å…¥åŠ›æƒ…å ±ãŒã‚ã‚‹ã‹ã©ã†ã‹(ï¼©ï¼­ï¼¥å…¥åŠ›ã‚’ã—ã¦ã„ã‚‹ã‹ã©ã†ã‹)ã§å‡¦ç†ã‚’åˆ†å²
 				if (ImeData)
 				{
-					drawStringToBox(InputBoxHandel, ImeData->InputString, 10 + CursorDotPos, 5, FontHandel);
+					drawStringToBox(InputBoxHandel, ImeData->InputString, 10 + CursorDotPos, 6, FontHandel);
 
 					if (BlendRate != 0)
 					{
 						SetDrawBlendMode(DX_BLENDMODE_ALPHA, BlendRate);
 					}
 
-					// •¶ß‚Ì”‚¾‚¯‰ºü‚ğ•`‰æ‚·‚é
+					// æ–‡ç¯€ã®æ•°ã ã‘ä¸‹ç·šã‚’æç”»ã™ã‚‹
 					for (int i = 0; i < ImeData->ClauseNum; i++)
 					{
-						// ‰ºü‚ÌŠJnÀ•W‚ğŒvZ
-						int LineStartX = GetDrawStringWidth(ImeData->InputString, ImeData->ClauseData[i].Position);
+						// ä¸‹ç·šã®é–‹å§‹åº§æ¨™ã‚’è¨ˆç®—
+						int LineStartX;
+						GetDrawStringSizeToHandle(&LineStartX, NULL, NULL, ImeData->InputString, ImeData->ClauseData[i].Position, getFont(FontHandel));
 
-						// ‰ºü‚Ì’·‚³‚ğŒvZ
-						int LineLength = GetDrawStringWidth(ImeData->InputString + ImeData->ClauseData[i].Position, ImeData->ClauseData[i].Length);
+						// ä¸‹ç·šã®é•·ã•ã‚’è¨ˆç®—
+						int LineLength;
+						GetDrawStringSizeToHandle(&LineLength, NULL, NULL, ImeData->InputString + ImeData->ClauseData[i].Position, ImeData->ClauseData[i].Length, getFont(FontHandel));
 
-						// ‰ºü‚Ì•`‰æ
-						if (CursorDotPos + LineStartX + LineLength + 10 + InBoxX > BoxXLength[InputBoxHandel])
+						// ä¸‹ç·šã®æç”»
+						if (CursorDotPos + LineStartX + LineLength + 10 + InBoxX > InBoxX + BoxXLength[InputBoxHandel])
 						{
-							DrawLine(BoxX[BoxHandel] + 10, BoxY[BoxHandel] + InBoxY + 22,
-								BoxX[BoxHandel] + BoxXLength[InputBoxHandel], BoxY[BoxHandel] + InBoxY + 22,
+							DrawLine(BoxX[BoxHandel] + 10 + InBoxX, BoxY[BoxHandel] + InBoxY + 22,
+								BoxX[BoxHandel] + BoxXLength[InputBoxHandel]+ InBoxX, BoxY[BoxHandel] + InBoxY + 22,
 								GetColor(255, 255, 255));
 						}
 						else
@@ -804,49 +866,53 @@ void UI::drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int In
 								GetColor(255, 255, 255));
 						}
 
-						// ‚à‚µ‘I‘ğ‚µ‚Ä‚¢‚é•¶ß‚¾‚Á‚½ê‡‚Í•¶ß‚ÌŠJnÀ•W‚ğ•Û‘¶‚µ‚Ä‚¨‚­
+						// ã‚‚ã—é¸æŠã—ã¦ã„ã‚‹æ–‡ç¯€ã ã£ãŸå ´åˆã¯æ–‡ç¯€ã®é–‹å§‹åº§æ¨™ã‚’ä¿å­˜ã—ã¦ãŠã
 						if (i == ImeData->SelectClause)
 						{
 							SelectClauseX = CursorDotPos + LineStartX + BoxX[BoxHandel] + InBoxX + 10;
 						}
 					}
 
-					// •ÏŠ·Œó•âƒŠƒXƒg‚ª‘¶İ‚·‚éê‡‚Í•`‰æˆ—‚ğs‚¤
+					// å¤‰æ›å€™è£œãƒªã‚¹ãƒˆãŒå­˜åœ¨ã™ã‚‹å ´åˆã¯æç”»å‡¦ç†ã‚’è¡Œã†
 					if (ImeData->CandidateNum)
 					{
-						// •ÏŠ·Œó•âƒŠƒXƒg‚ÌŠJnƒiƒ“ƒo[‚ğŒvZ
+						// å¤‰æ›å€™è£œãƒªã‚¹ãƒˆã®é–‹å§‹ãƒŠãƒ³ãƒãƒ¼ã‚’è¨ˆç®—
 						int StartNumber = ImeData->SelectCandidate / 5 * 5;
 
-						// •ÏŠ·Œó•âƒŠƒXƒg‚Ì“¯•\¦”‚É’B‚·‚é‚©A•ÏŠ·Œó•âƒŠƒXƒg‚ÌI’[‚É—ˆ‚é‚Ü‚Åƒ‹[ƒv
+						// å¤‰æ›å€™è£œãƒªã‚¹ãƒˆã®åŒæ™‚è¡¨ç¤ºæ•°ã«é”ã™ã‚‹ã‹ã€å¤‰æ›å€™è£œãƒªã‚¹ãƒˆã®çµ‚ç«¯ã«æ¥ã‚‹ã¾ã§ãƒ«ãƒ¼ãƒ—
 						for (int i = 0; StartNumber + i < ImeData->CandidateNum && i < 5; i++)
 						{
-							// •ÏŠ·Œó•â‚Ì•`‰æ
+							// å¤‰æ›å€™è£œã®æç”»
 							DrawString(SelectClauseX, i * 20 + BoxY[BoxHandel] + InBoxY + 30, ImeData->CandidateList[StartNumber + i], GetColor(255, 255, 255));
 
 							if (i == 4)DrawFormatString(SelectClauseX + 30, i * 20 + BoxY[BoxHandel] + InBoxY + 30, -1, "%d ", ImeData->SelectCandidate);
 						}
 
-						// ‘I‘ğ‚µ‚Ä‚¢‚é•ÏŠ·Œó•â‚ğˆÍ‚¤˜g‚Ì•`‰æ
+						// é¸æŠã—ã¦ã„ã‚‹å¤‰æ›å€™è£œã‚’å›²ã†æ ã®æç”»
+						int LineStartX;
+						GetDrawStringSizeToHandle(&LineStartX, NULL, NULL, ImeData->CandidateList[ImeData->SelectCandidate - StartNumber], strlen(ImeData->CandidateList[ImeData->SelectCandidate - StartNumber]), getFont(FontHandel));
+
 						DrawBox(
 							SelectClauseX - 2,
 							(ImeData->SelectCandidate - StartNumber) * 20 + BoxY[BoxHandel] + InBoxY + 28,
-							SelectClauseX + 2 + GetDrawStringWidth(ImeData->CandidateList[ImeData->SelectCandidate - StartNumber], strlen(ImeData->CandidateList[ImeData->SelectCandidate - StartNumber])),
+							SelectClauseX + 2 + LineStartX,
 							(ImeData->SelectCandidate - StartNumber) * 20 + BoxY[BoxHandel] + InBoxY + 48,
 							GetColor(0, 255, 128), FALSE);
 					}
 
 					if (Flash > 30)
 					{
-						// ƒJ[ƒ\ƒ‹‚Ì•`‰æ
-						int LineStartX = GetDrawStringWidth(ImeData->InputString, ImeData->CursorPosition);
+						// ã‚«ãƒ¼ã‚½ãƒ«ã®æç”»
+						int LineStartX;
+						GetDrawStringSizeToHandle(&LineStartX,NULL, NULL,ImeData->InputString, ImeData->CursorPosition, getFont(FontHandel));
 
-						if (InBoxX + 15 + LineStartX + CursorDotPos > BoxXLength[InputBoxHandel])
+						if (InBoxX + LineStartX + CursorDotPos > InBoxX + BoxXLength[InputBoxHandel])
 						{
-							DrawBox(BoxX[BoxHandel] + BoxXLength[InputBoxHandel] , BoxY[BoxHandel] + InBoxY + 5, BoxX[BoxHandel] + BoxXLength[InputBoxHandel] + 1, BoxY[BoxHandel] + InBoxY + 24, GetColor(255, 255, 255), TRUE);
+							DrawBox(BoxX[BoxHandel] + BoxXLength[InputBoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, BoxX[BoxHandel] + BoxXLength[InputBoxHandel] -1 + InBoxX, BoxY[BoxHandel] + InBoxY + 19, GetColor(255, 255, 255), TRUE);
 						}
 						else
 						{
-							DrawBox(BoxX[BoxHandel] + InBoxX + 14 + CursorDotPos + LineStartX, BoxY[BoxHandel] + InBoxY + 5, BoxX[BoxHandel] + InBoxX + 15 + LineStartX + CursorDotPos, BoxY[BoxHandel] + InBoxY + 24, GetColor(255, 255, 255), TRUE);
+							DrawBox(BoxX[BoxHandel] + InBoxX + 14 + CursorDotPos + LineStartX, BoxY[BoxHandel] + InBoxY, BoxX[BoxHandel] + InBoxX + 15 + LineStartX + CursorDotPos, BoxY[BoxHandel] + InBoxY + 19, GetColor(255, 255, 255), TRUE);
 						}
 					}
 
@@ -863,17 +929,17 @@ void UI::drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int In
 						SetDrawBlendMode(DX_BLENDMODE_ALPHA, BlendRate);
 					}
 
-					// ‚h‚l‚d“ü—Í‚ğ‚µ‚Ä‚¢‚È‚¢ê‡
-					// ƒJ[ƒ\ƒ‹‚ğ•`‰æ
+					// ï¼©ï¼­ï¼¥å…¥åŠ›ã‚’ã—ã¦ã„ãªã„å ´åˆ
+					// ã‚«ãƒ¼ã‚½ãƒ«ã‚’æç”»
 					if (Flash > 30)
 					{
-						if (InBoxX + CursorDotPos > BoxXLength[InputBoxHandel])
+						if (InBoxX + CursorDotPos > InBoxX + BoxXLength[InputBoxHandel])
 						{
-							DrawBox(BoxX[BoxHandel] + BoxXLength[InputBoxHandel] , BoxY[BoxHandel] + InBoxY + 5, BoxX[BoxHandel] + BoxXLength[InputBoxHandel] +1, BoxY[BoxHandel] + InBoxY + 24, GetColor(255, 255, 255), TRUE);
+							DrawBox(BoxX[BoxHandel] + BoxXLength[InputBoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, BoxX[BoxHandel] + BoxXLength[InputBoxHandel] -1 + InBoxX, BoxY[BoxHandel] + InBoxY + 19, GetColor(255, 255, 255), TRUE);
 						}
 						else
 						{
-							DrawBox(BoxX[BoxHandel] + InBoxX + 14 + CursorDotPos, BoxY[BoxHandel] + InBoxY + 5, BoxX[BoxHandel] + InBoxX + 15 + CursorDotPos, BoxY[BoxHandel] + InBoxY + 24, GetColor(255, 255, 255), TRUE);
+							DrawBox(BoxX[BoxHandel] + InBoxX + 14 + CursorDotPos, BoxY[BoxHandel] + InBoxY, BoxX[BoxHandel] + InBoxX + 15 + CursorDotPos, BoxY[BoxHandel] + InBoxY + 19, GetColor(255, 255, 255), TRUE);
 						}
 					}
 					if (BlendRate != 0)
@@ -888,12 +954,12 @@ void UI::drawInputBoxToBox(int BoxHandel, int InputBoxHandel, int InBoxX, int In
 	}
 }
 
-bool UI::updateInputBox(int BoxHandel, std::string &data)
+bool UI::updateInputBox(int BoxHandel, std::string data)
 {
 	if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
 	{
 		int MouseX, MouseY;
-		// ƒ}ƒEƒX‚ÌˆÊ’u‚ğæ“¾
+		// ãƒã‚¦ã‚¹ã®ä½ç½®ã‚’å–å¾—
 		GetMousePoint(&MouseX, &MouseY);
 
 		if (MouseX > BoxX[BoxHandel] && MouseX < BoxX[BoxHandel] + BoxXLength[BoxHandel])
@@ -912,17 +978,30 @@ bool UI::updateInputBox(int BoxHandel, std::string &data)
 
 		data = std::string(String);
 
+		NowActiveKeyI = -1;
+
 		return 1;
 	}
 	else
 	{
-		return 0;
+		if(CheckHitKey(KEY_INPUT_TAB) != 0) {
+			for (int i = BoxHandel; i<CloseInput.size(); i++)
+			{
+				if (CloseInput[i] == 0)activateInputBox(i);
+			}
+		}
 	}
+	return 0;
 }
 
 int UI::getNowActiveKey()
 {
 	return NowActiveKey;
+}
+
+int UI::getNowActiveKeyI()
+{
+	return NowActiveKeyI;
 }
 
 std::string UI::getInputString(int InputBoxHandel)
@@ -935,15 +1014,15 @@ std::string UI::getInputString(int InputBoxHandel)
 }
 
 
-int UI::makeButton(const char *drawString, int &FontHandel)
+int UI::makeButton(const char *drawString, int &FontHandel, int color)
 {
 	int FontSize;
 	GetFontStateToHandle(NULL, &FontSize, NULL, getFont(FontHandel));
 
-	int XLength = GetDrawFormatStringWidthToHandle(getFont(FontHandel), drawString) +11;
-	int YLength = FontSize +10;
+	int XLength = GetDrawFormatStringWidthToHandle(getFont(FontHandel), drawString) + 11;
+	int YLength = FontSize + 10;
 
-	int box = makeBoxRounded(XLength, YLength);
+	int box = makeBoxRounded(XLength, YLength, color);
 
 	ButtonString[box] = drawString;
 	InputHandle[box] = FontHandel;
@@ -959,15 +1038,15 @@ void UI::drawButtonToBox(int BoxHandel, int ButtonHandel, int InBoxX, int InBoxY
 		{
 			drawBox(BoxX[BoxHandel] + InBoxX, BoxY[BoxHandel] + InBoxY, ButtonHandel, BlendRate);
 
-			drawStringToBox(ButtonHandel, ButtonString[ButtonHandel], 5, 5, InputHandle[ButtonHandel]);
+			drawStringToBox(ButtonHandel, ButtonString[ButtonHandel], 5, 4, InputHandle[ButtonHandel]);
 		}
 	}
 	else
-	{ 
+	{
 		if (BoxXLength[BoxHandel] - InBoxX < BoxXLength[BoxHandel] && BoxYLength[BoxHandel] - InBoxY < BoxYLength[BoxHandel])
 		{
 			drawBox(BoxX[BoxHandel] + BoxXLength[BoxHandel] - InBoxX, BoxY[BoxHandel] + BoxYLength[BoxHandel] - InBoxY, ButtonHandel, BlendRate);
-			 
+
 			drawStringToBox(ButtonHandel, ButtonString[ButtonHandel], 5, 5, InputHandle[ButtonHandel]);
 		}
 	}
@@ -978,7 +1057,7 @@ bool UI::updateButton(int BoxHandel)
 	if ((GetMouseInput() & MOUSE_INPUT_LEFT) != 0)
 	{
 		int MouseX, MouseY;
-		// ƒ}ƒEƒX‚ÌˆÊ’u‚ğæ“¾
+		// ãƒã‚¦ã‚¹ã®ä½ç½®ã‚’å–å¾—
 		GetMousePoint(&MouseX, &MouseY);
 
 		if (MouseX > BoxX[BoxHandel] && MouseX < BoxX[BoxHandel] + BoxXLength[BoxHandel])
@@ -1005,3 +1084,23 @@ std::string UI::getButtonString(int ButtonHandel)
 	return ButtonString[ButtonHandel];
 }
 
+int UI::clearScreen()
+{
+	ClearDrawScreen();
+	return 0;
+}
+
+int UI::show()
+{
+	ScreenFlip();
+	return 0;
+}
+
+void UI::drawMausePoint()
+{
+	int MouseX, MouseY;
+	// ãƒã‚¦ã‚¹ã®ä½ç½®ã‚’å–å¾—
+	GetMousePoint(&MouseX, &MouseY);
+
+	DrawFormatString(0, 0, -1, "X: %d  Y: %d ", MouseX, MouseY);
+}

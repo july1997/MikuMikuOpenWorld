@@ -1,6 +1,6 @@
-#include "Bullet_physics.h"
+ï»¿#include "Bullet_physics.h"
 
-//Bullet_physics.h‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢
+//Bullet_physics.hã‚’å‚ç…§ã—ã¦ãã ã•ã„
 
 Bullet_physics::Bullet_physics()
 {
@@ -16,24 +16,27 @@ int Bullet_physics::createWorld(VECTOR WorldMin, VECTOR WorldMax, int maxProxies
 {
 	WorldHandel++;
 
-	// ƒ[ƒ‹ƒh‚ÌL‚³
+	// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã®åºƒã•
 	btVector3 worldAabbMin = btvDxv(WorldMin);
 	btVector3 worldAabbMax = btvDxv(WorldMax);
 
-	// broadphase‚Ìì¬iSAP–@j
+	// broadphaseã®ä½œæˆï¼ˆSAPæ³•ï¼‰
 	broadphase.push_back(new btAxisSweep3(worldAabbMin, worldAabbMax, maxProxies));
-	
-	// ƒfƒtƒHƒ‹ƒg‚ÌÕ“Ëİ’è‚ÆƒfƒBƒXƒpƒbƒ`ƒƒ‚Ìì¬
+
+	// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®è¡çªè¨­å®šã¨ãƒ‡ã‚£ã‚¹ãƒ‘ãƒƒãƒãƒ£ã®ä½œæˆ
 	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
 	btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
+	
+	//ã‚³ãƒªã‚¸ãƒ§ãƒ³ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ç•°ãªã‚‹ã‚¿ã‚¤ãƒ—ï¼ˆbtGImpactMeshShapeã‚’ä½¿ç”¨ã—ã¦ã€ä¾‹ãˆã°ãƒ¡ãƒƒã‚·ãƒ¥ï¼‰ã‚’å°å…¥ã—ãŸå ´åˆã€ã‚ãªãŸã¯è¡çªãŒèªè­˜å–å¾—ã™ã‚‹è¡çªã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã‚’ç™»éŒ²ã™ã‚‹å¿…è¦ãŒã‚ã‚‹å ´åˆãŒã‚ã‚Šã¾ã™ã€‚
+	//btGImpactCollisionAlgorithm::registerAlgorithm(dynamicsWorld[WorldHandle]->getDispatcher());
 
-	// Õ“Ë‰ğŒˆƒ\ƒ‹ƒo
+	// è¡çªè§£æ±ºã‚½ãƒ«ãƒ
 	btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
 
-	//std::vector‚Å’Ç‰Á
+	//std::vectorã§è¿½åŠ 
 	dynamicsWorld.push_back(new btDiscreteDynamicsWorld(dispatcher, broadphase[WorldHandel], solver, collisionConfiguration));
 
-	// d—Í‚Ìİ’è
+	// é‡åŠ›ã®è¨­å®š
 	dynamicsWorld[WorldHandel]->setGravity(btvDxv(Gravity));
 
 	return WorldHandel;
@@ -48,17 +51,17 @@ int Bullet_physics::createGroundBodytoMesh(int ModelHandel, int WorldHandle)
 {
 	BodyHandel++;
 
-	//ƒ‚ƒfƒ‹ƒf[ƒ^‚©‚ç’n–Ê‚Ìì¬
-	// QÆ—pƒƒbƒVƒ…‚Ì\’z
+	//ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰åœ°é¢ã®ä½œæˆ
+	// å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥ã®æ§‹ç¯‰
 	MV1SetupReferenceMesh(ModelHandel, -1, TRUE);
 
-	// QÆ—pƒƒbƒVƒ…‚Ìæ“¾
+	// å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥ã®å–å¾—
 	MV1_REF_POLYGONLIST RefMesh = MV1GetReferenceMesh(ModelHandel, -1, TRUE);
 
-	//’n–Ê‚ÌƒƒbƒVƒ…‚©‚çƒgƒ‰ƒCƒAƒ“ƒOƒ‹ƒŠƒXƒgì¬
+	//åœ°é¢ã®ãƒ¡ãƒƒã‚·ãƒ¥ã‹ã‚‰ãƒˆãƒ©ã‚¤ã‚¢ãƒ³ã‚°ãƒ«ãƒªã‚¹ãƒˆä½œæˆ
 	btTriangleMesh* VartexGround = new btTriangleMesh();
 
-	// ƒ|ƒŠƒSƒ“‚Ì”‚¾‚¯ŒJ‚è•Ô‚µ
+	// ãƒãƒªã‚´ãƒ³ã®æ•°ã ã‘ç¹°ã‚Šè¿”ã—
 	for (int i = 0; i < RefMesh.PolygonNum; i++)
 	{
 		float a0 = RefMesh.Vertexs[RefMesh.Polygons[i].VIndex[0]].Position.x;
@@ -76,26 +79,26 @@ int Bullet_physics::createGroundBodytoMesh(int ModelHandel, int WorldHandle)
 		VartexGround->addTriangle(A, B, C, false);
 	}
 
-	// ’n–Ê‚ÌÕ“ËŒ`ó‚Ìì¬
+	// åœ°é¢ã®è¡çªå½¢çŠ¶ã®ä½œæˆ
 	btBvhTriangleMeshShape* groundShape = new btBvhTriangleMeshShape(VartexGround, true, true);
 
-	// ’n–Ê‚ÌMotionState‚Ìİ’è
+	// åœ°é¢ã®MotionStateã®è¨­å®š
 	btDefaultMotionState* groundMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
 
-	// ’n–Ê‚Ì‰Šúî•ñ‚ğİ’è
-	btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI( 0, groundMotionState, groundShape, btVector3(0, 0, 0));
-	
-	// ’n–Ê‚Ì„‘Ì‚Ìì¬
+	// åœ°é¢ã®åˆæœŸæƒ…å ±ã‚’è¨­å®š
+	btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, groundMotionState, groundShape, btVector3(0, 0, 0));
+
+	// åœ°é¢ã®å‰›ä½“ã®ä½œæˆ
 	body.push_back(new btRigidBody(groundRigidBodyCI));
 
 	if (UseSoftWorld)
 	{
-		//ƒ\ƒtƒgƒ[ƒ‹ƒh‚É’Ç‰Á
+		//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«è¿½åŠ 
 		softWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 	else
 	{
-		// ƒ[ƒ‹ƒh‚É’n–Ê‚Ì„‘Ì‚ğ’Ç‰Á
+		// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«åœ°é¢ã®å‰›ä½“ã‚’è¿½åŠ 
 		dynamicsWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 
@@ -111,29 +114,31 @@ int Bullet_physics::createBoxBody(int WorldHandle, VECTOR boxHalfExtents, VECTOR
 {
 	BodyHandel++;
 
-	// ” 
+	// ç®±
 	btCollisionShape* boxshape = new btBoxShape(btvDxv(boxHalfExtents));
 
-	// ” ‚ÌMotionState‚Ìİ’è
+	// ç®±ã®MotionStateã®è¨­å®š
 	btDefaultMotionState* moptionstate = new btDefaultMotionState(btTransform(btQuaternion(rot.x, rot.y, rot.z, 1), btvDxv(pos)));
 
-	// ¿—ÊAŠµ«‚Ìİ’è
-	boxshape->calculateLocalInertia(btScalar(mass), btvDxv(inertia));//inertia@Šµ«
+	btVector3 tes = btvDxv(inertia);
 
-	// ” ‚Ì‰Šúî•ñ‚ğİ’è
+	// è³ªé‡ã€æ…£æ€§ã®è¨­å®š
+	boxshape->calculateLocalInertia(btScalar(mass), tes);//inertiaã€€æ…£æ€§
+
+	// ç®±ã®åˆæœŸæƒ…å ±ã‚’è¨­å®š
 	btRigidBody::btRigidBodyConstructionInfo screenshapebodyCI(mass, moptionstate, boxshape, btvDxv(inertia));
 
-	// ” ‚Ì„‘Ì‚Ìì¬
+	// ç®±ã®å‰›ä½“ã®ä½œæˆ
 	body.push_back(new btRigidBody(screenshapebodyCI));
 
 	if (UseSoftWorld)
 	{
-		//ƒ\ƒtƒgƒ[ƒ‹ƒh‚É’Ç‰Á
+		//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«è¿½åŠ 
 		softWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 	else
 	{
-		// ƒ[ƒ‹ƒh‚É” ‚Ì„‘Ì‚ğ’Ç‰Á
+		// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ç®±ã®å‰›ä½“ã‚’è¿½åŠ 
 		dynamicsWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 	return BodyHandel;
@@ -144,7 +149,7 @@ VECTOR Bullet_physics::getBodyPos(int BodyHandel, VECTOR subtractVC)
 	btTransform trans;
 	body[BodyHandel]->getMotionState()->getWorldTransform(trans);
 
-	// ˆÊ’uæ“¾
+	// ä½ç½®å–å¾—
 	VECTOR pos = btVGet(trans.getOrigin());
 	pos = VGet(pos.x - subtractVC.x, pos.y - subtractVC.y, pos.z - subtractVC.z);
 	return pos;
@@ -155,7 +160,7 @@ VECTOR Bullet_physics::getBodyRot(int BodyHandel)
 	btTransform trans;
 	body[BodyHandel]->getMotionState()->getWorldTransform(trans);
 
-	// Šp“xæ“¾
+	// è§’åº¦å–å¾—
 	btVector3 euler;
 
 	btMatrix3x3 basis = trans.getBasis();
@@ -169,41 +174,175 @@ void Bullet_physics::stepSimulation(int WorldHandle, float fps)
 {
 	if (UseSoftWorld)
 	{
-		softWorld[WorldHandle]->stepSimulation(1 / fps, 10);
+		softWorld[WorldHandle]->stepSimulation(btScalar(1 / fps), 10);
 	}
 	else
 	{
-		dynamicsWorld[WorldHandle]->stepSimulation(1 / fps, 10);
+		dynamicsWorld[WorldHandle]->stepSimulation(btScalar(1 / fps), 10);
 	}
 }
 
-int Bullet_physics::ceateSphereBody(int WorldHandle, float radius, VECTOR pos, VECTOR rot, float mass, VECTOR inertia)
+int Bullet_physics::createSphereBody(int WorldHandle, float radius, VECTOR pos, VECTOR rot, float mass, VECTOR inertia)
 {
 	BodyHandel++;
 
-	//‹…
+	//çƒ
 	btCollisionShape* sphereshape = new btSphereShape(radius);
-	// ” ‚ÌMotionState‚Ìİ’è
+	// ç®±ã®MotionStateã®è¨­å®š
 	btDefaultMotionState* motionstate = new btDefaultMotionState(btTransform(btQuaternion(rot.x, rot.y, rot.z, 1), btvDxv(pos)));
-	// ¿—ÊAŠµ«‚Ìİ’è
-	sphereshape->calculateLocalInertia(mass, btvDxv(inertia));
-	// ” ‚Ì‰Šúî•ñ‚ğİ’è
+
+	btVector3 tes = btvDxv(inertia);
+	// è³ªé‡ã€æ…£æ€§ã®è¨­å®š
+	sphereshape->calculateLocalInertia(mass, tes);
+	// ç®±ã®åˆæœŸæƒ…å ±ã‚’è¨­å®š
 	btRigidBody::btRigidBodyConstructionInfo sphereshapebodyCI(mass, motionstate, sphereshape, btvDxv(inertia));
-	// ” ‚Ì„‘Ì‚Ìì¬
+	// ç®±ã®å‰›ä½“ã®ä½œæˆ
 	body.push_back(new btRigidBody(sphereshapebodyCI));
 
 	if (UseSoftWorld)
 	{
-		//ƒ\ƒtƒgƒ[ƒ‹ƒh‚É’Ç‰Á
+		//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«è¿½åŠ 
 		softWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 	else
 	{
-		// ƒ[ƒ‹ƒh‚É” ‚Ì„‘Ì‚ğ’Ç‰Á
+		// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ç®±ã®å‰›ä½“ã‚’è¿½åŠ 
 		dynamicsWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 
 	return BodyHandel;
+}
+
+int Bullet_physics::createBodytoMesh(int DXLibeModelHandel, int WorldHandle, VECTOR pos, VECTOR rot, float mass, VECTOR inertia)
+{
+	BodyHandel++;
+
+	//ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰åœ°é¢ã®ä½œæˆ
+	// å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥ã®æ§‹ç¯‰
+	MV1SetupReferenceMesh(DXLibeModelHandel, -1, TRUE);
+
+	// å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥ã®å–å¾—
+	MV1_REF_POLYGONLIST RefMesh = MV1GetReferenceMesh(DXLibeModelHandel, -1, TRUE);
+
+	//è¡çªå½¢çŠ¶ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ä½œæˆ
+	btTriangleIndexVertexArray* indexVertexArrays = new btTriangleIndexVertexArray(RefMesh.PolygonNum,
+		&RefMesh.Polygons[0].VIndex[0], sizeof(MV1_REF_POLYGON), RefMesh.VertexNum, &RefMesh.Vertexs[0].Position.x, sizeof(MV1_REF_VERTEX));
+
+	// è¡çªå½¢çŠ¶ã®ä½œæˆ
+	btGImpactMeshShape *shape = new btGImpactMeshShape(indexVertexArrays);
+	//updateBound()ã‚’å¿˜ã‚Œãªã„ã‚ˆã†ã«
+	shape->updateBound();
+
+	// ç®±ã®MotionStateã®è¨­å®š
+	btDefaultMotionState* moptionstate = new btDefaultMotionState(btTransform(btQuaternion(rot.x, rot.y, rot.z, 1), btvDxv(pos)));
+
+	btVector3 tes = btvDxv(inertia);
+
+	// è³ªé‡ã€æ…£æ€§ã®è¨­å®š
+	shape->calculateLocalInertia(btScalar(mass), tes);//inertiaã€€æ…£æ€§
+
+	// ç®±ã®åˆæœŸæƒ…å ±ã‚’è¨­å®š
+	btRigidBody::btRigidBodyConstructionInfo screenshapebodyCI(mass, moptionstate, shape, btvDxv(inertia));
+
+	// ç®±ã®å‰›ä½“ã®ä½œæˆ
+	body.push_back(new btRigidBody(screenshapebodyCI));
+
+	if (UseSoftWorld)
+	{
+		//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«è¿½åŠ 
+		softWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
+	}
+	else
+	{
+		// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ç®±ã®å‰›ä½“ã‚’è¿½åŠ 
+		dynamicsWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
+	}
+	return BodyHandel;
+}
+
+int Bullet_physics::createBodytoMesh2(int DXLibeModelHandel, int WorldHandle, VECTOR pos, VECTOR rot, float mass, VECTOR inertia)
+{
+	BodyHandel++;
+
+	//ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰åœ°é¢ã®ä½œæˆ
+	// å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥ã®æ§‹ç¯‰
+	MV1SetupReferenceMesh(DXLibeModelHandel, -1, TRUE);
+
+	// å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥ã®å–å¾—
+	MV1_REF_POLYGONLIST RefMesh = MV1GetReferenceMesh(DXLibeModelHandel, -1, TRUE);
+
+	VECTOR *Points;
+
+	Points = (VECTOR *)malloc(sizeof(VECTOR) * RefMesh.PolygonNum * 3);
+	for (int i = 0; i < RefMesh.PolygonNum; i++)
+	{
+		Points[i * 3] = RefMesh.Vertexs[RefMesh.Polygons[i].VIndex[0]].Position;
+		Points[i * 3 + 1] = RefMesh.Vertexs[RefMesh.Polygons[i].VIndex[1]].Position;
+		Points[i * 3 + 2] = RefMesh.Vertexs[RefMesh.Polygons[i].VIndex[2]].Position;
+	}
+
+	// è¡çªå½¢çŠ¶ã®ä½œæˆ
+	btConvexHullShape *shape = new btConvexHullShape((btScalar *)Points, RefMesh.PolygonNum * 3, sizeof(VECTOR));
+
+	// ç®±ã®MotionStateã®è¨­å®š
+	btDefaultMotionState* moptionstate = new btDefaultMotionState(btTransform(btQuaternion(rot.x, rot.y, rot.z, 1), btvDxv(pos)));
+
+	btVector3 tes = btvDxv(inertia);
+
+	// è³ªé‡ã€æ…£æ€§ã®è¨­å®š
+	shape->calculateLocalInertia(btScalar(mass), tes);//inertiaã€€æ…£æ€§
+
+																  // ç®±ã®åˆæœŸæƒ…å ±ã‚’è¨­å®š
+	btRigidBody::btRigidBodyConstructionInfo screenshapebodyCI(mass, moptionstate, shape, btvDxv(inertia));
+
+	// ç®±ã®å‰›ä½“ã®ä½œæˆ
+	body.push_back(new btRigidBody(screenshapebodyCI));
+
+	if (UseSoftWorld)
+	{
+		//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«è¿½åŠ 
+		softWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
+	}
+	else
+	{
+		// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ç®±ã®å‰›ä½“ã‚’è¿½åŠ 
+		dynamicsWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
+	}
+	free(Points);
+
+	return BodyHandel;
+}
+
+int Bullet_physics::removeRigidBody(int WorldHandle, int BodyHandel)
+{
+	if (UseSoftWorld)
+	{
+		//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«è¿½åŠ 
+		softWorld[WorldHandle]->removeRigidBody(body[BodyHandel]);
+	}
+	else
+	{
+		// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«åœ°é¢ã®å‰›ä½“ã‚’è¿½åŠ 
+		dynamicsWorld[WorldHandle]->removeRigidBody(body[BodyHandel]);
+	}
+
+	body.erase(body.begin() + BodyHandel);
+
+	BodyHandel--;
+
+	return 0;
+}
+
+btDiscreteDynamicsWorld* Bullet_physics::getWorld(int WorldHandel)
+{
+	if (UseSoftWorld)
+	{
+		return softWorld[WorldHandel];
+	}
+	else
+	{
+		return dynamicsWorld[WorldHandel];
+	}
 }
 
 btAxisSweep3* Bullet_physics::getBroadphase(int WorldHandel)
@@ -227,67 +366,66 @@ int Bullet_physics::createCar(int *CarBodyHandel, int WorldHandle, VECTOR boxHal
 	BodyHandel++;
 	CarHandel++;
 
-	//” ‚Ìì¬
-	//createBox‚Å‚Í‚Å‚«‚È‚¢‚Ì‚Å•ª‚¯‚ç‚ê‚È‚¢-------
+	//ç®±ã®ä½œæˆ
 
-	// ” ‚ÌÕ“ËŒ`ó‚Ìì¬							«’†S‚©‚ç
+	// ç®±ã®è¡çªå½¢çŠ¶ã®ä½œæˆ							â†“ä¸­å¿ƒã‹ã‚‰
 	btCollisionShape* boxShape = new btBoxShape(btvDxv(boxHalfExtents));
-	// ” ‚ÌMotionState‚Ìİ’è
+	// ç®±ã®MotionStateã®è¨­å®š
 	btDefaultMotionState* fallMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
 	btVector3 fallInertia(0, 0, 0);
-	boxShape->calculateLocalInertia( mass, fallInertia );
-	// ” ‚Ì‰Šúî•ñ‚ğİ’è
-	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI3( mass, fallMotionState, boxShape, fallInertia);
-	// ” ‚Ì„‘Ì‚Ìì¬
+	boxShape->calculateLocalInertia(mass, fallInertia);
+	// ç®±ã®åˆæœŸæƒ…å ±ã‚’è¨­å®š
+	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI3(mass, fallMotionState, boxShape, fallInertia);
+	// ç®±ã®å‰›ä½“ã®ä½œæˆ
 	body.push_back(new btRigidBody(fallRigidBodyCI3));
 
 	if (UseSoftWorld)
 	{
-		//ƒ\ƒtƒgƒ[ƒ‹ƒh‚É’Ç‰Á
+		//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«è¿½åŠ 
 		softWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 	else
 	{
-		// ƒ[ƒ‹ƒh‚É” ‚Ì„‘Ì‚ğ’Ç‰Á
+		// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ç®±ã®å‰›ä½“ã‚’è¿½åŠ 
 		dynamicsWorld[WorldHandle]->addRigidBody(body[BodyHandel]);
 	}
 	*CarBodyHandel = BodyHandel;
 	//--------------------------------------------
 
-	//ŠÈˆÕ‚ÈBulletÔ—¼ƒ‚ƒfƒ‹
+	//ç°¡æ˜“ãªBulletè»Šä¸¡ãƒ¢ãƒ‡ãƒ«
 	btRaycastVehicle::btVehicleTuning	m_tuning;
 
-	//ƒ\ƒtƒgƒ[ƒ‹ƒh‚Ì
+	//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã®æ™‚
 	if (UseSoftWorld)
 	{
 		btVehicleRaycaster* m_vehicleRayCaster = new btDefaultVehicleRaycaster(softWorld[WorldHandle]);
 		vehicle.push_back(new btRaycastVehicle(m_tuning, body[BodyHandel], m_vehicleRayCaster));
-		body[BodyHandel]->setActivationState(DISABLE_DEACTIVATION);//–³Œø‰»‚ğ‹‘”Û
+		body[BodyHandel]->setActivationState(DISABLE_DEACTIVATION);//ç„¡åŠ¹åŒ–ã‚’æ‹’å¦
 		softWorld[WorldHandle]->addVehicle(vehicle[CarHandel]);
 
 		btCollisionShape* m_wheelShape = new btCylinderShapeX(btVector3(wheelWidth, wheelRadius, wheelRadius));
 
 		body[BodyHandel]->setCenterOfMassTransform(btTransform::getIdentity());
-		body[BodyHandel]->setAngularVelocity(btvDxv(rot));//Ô‚ÌŠp“x‚ğw’è
-		body[BodyHandel]->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btvDxv(pos)));//ˆÊ’u‚ğw’è
-		body[BodyHandel]->setGravity(btvDxv(Gravity));//d—Í‚Ìİ’è
+		body[BodyHandel]->setAngularVelocity(btvDxv(rot));//è»Šã®è§’åº¦ã‚’æŒ‡å®š
+		body[BodyHandel]->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btvDxv(pos)));//ä½ç½®ã‚’æŒ‡å®š
+		body[BodyHandel]->setGravity(btvDxv(Gravity));//é‡åŠ›ã®è¨­å®š
 
 		softWorld[WorldHandle]->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(body[BodyHandel]->getBroadphaseHandle(), softWorld[WorldHandle]->getDispatcher());
 	}
 	else
 	{
-		//ŠÈˆÕ‚ÈBulletÔ—¼ƒ‚ƒfƒ‹
+		//ç°¡æ˜“ãªBulletè»Šä¸¡ãƒ¢ãƒ‡ãƒ«
 		btVehicleRaycaster* m_vehicleRayCaster = new btDefaultVehicleRaycaster(dynamicsWorld[WorldHandle]);
 		vehicle.push_back(new btRaycastVehicle(m_tuning, body[BodyHandel], m_vehicleRayCaster));
-		body[BodyHandel]->setActivationState(DISABLE_DEACTIVATION);//–³Œø‰»‚ğ‹‘”Û
+		body[BodyHandel]->setActivationState(DISABLE_DEACTIVATION);//ç„¡åŠ¹åŒ–ã‚’æ‹’å¦
 		dynamicsWorld[WorldHandle]->addVehicle(vehicle[CarHandel]);
 
 		btCollisionShape* m_wheelShape = new btCylinderShapeX(btVector3(wheelWidth, wheelRadius, wheelRadius));
 
 		body[BodyHandel]->setCenterOfMassTransform(btTransform::getIdentity());
-		body[BodyHandel]->setAngularVelocity(btvDxv(rot));//Ô‚ÌŠp“x‚ğw’è
-		body[BodyHandel]->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btvDxv(pos)));//ˆÊ’u‚ğw’è
-		body[BodyHandel]->setGravity(btvDxv(Gravity));//d—Í‚Ìİ’è
+		body[BodyHandel]->setAngularVelocity(btvDxv(rot));//è»Šã®è§’åº¦ã‚’æŒ‡å®š
+		body[BodyHandel]->setWorldTransform(btTransform(btQuaternion(0, 0, 0, 1), btvDxv(pos)));//ä½ç½®ã‚’æŒ‡å®š
+		body[BodyHandel]->setGravity(btvDxv(Gravity));//é‡åŠ›ã®è¨­å®š
 
 		dynamicsWorld[WorldHandle]->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(body[BodyHandel]->getBroadphaseHandle(), dynamicsWorld[WorldHandle]->getDispatcher());
 	}
@@ -295,33 +433,33 @@ int Bullet_physics::createCar(int *CarBodyHandel, int WorldHandle, VECTOR boxHal
 	if (vehicle[CarHandel])
 	{
 		vehicle[CarHandel]->resetSuspension();
-		for (int i = 0; i<vehicle[CarHandel]->getNumWheels(); i++)
+		for (int i = 0; i < vehicle[CarHandel]->getNumWheels(); i++)
 		{
 			//synchronize the wheels with the (interpolated) chassis worldtransform
 			vehicle[CarHandel]->updateWheelTransform(i, true);
 		}
 	}
 
-	vehicle[CarHandel]->setCoordinateSystem(0, 1, 2);//À•WŒn‚ğ‘I‘ğ‚µ‚Ü‚·
+	vehicle[CarHandel]->setCoordinateSystem(0, 1, 2);//åº§æ¨™ç³»ã‚’é¸æŠã—ã¾ã™
 
 	bool isFrontWheel = false;
-	btVector3 connectionPointCS0  ( boxHalfExtents.x - (0.3*wheelWidth), connectionHeight, 2.1 * 10.f - wheelRadius);
+	btVector3 connectionPointCS0(boxHalfExtents.x - (0.3*wheelWidth), connectionHeight, 2.1 * 10.f - wheelRadius);
 	vehicle[CarHandel]->addWheel(connectionPointCS0, btvDxv(wheelDirectionCS0), btvDxv(wheelAxleCS), suspensionRestLength, wheelRadius, m_tuning, isFrontWheel);
 
 
-	connectionPointCS0 = btVector3( -boxHalfExtents.x + (0.3*wheelWidth), connectionHeight, 2.1 * 10.f - wheelRadius);
+	connectionPointCS0 = btVector3(-boxHalfExtents.x + (0.3*wheelWidth), connectionHeight, 2.1 * 10.f - wheelRadius);
 	vehicle[CarHandel]->addWheel(connectionPointCS0, btvDxv(wheelDirectionCS0), btvDxv(wheelAxleCS), suspensionRestLength, wheelRadius, m_tuning, isFrontWheel);
 
 
 	isFrontWheel = true;
-	connectionPointCS0 = btVector3( -boxHalfExtents.x + (0.3*wheelWidth), connectionHeight, -2.5 * 10.f + wheelRadius);
+	connectionPointCS0 = btVector3(-boxHalfExtents.x + (0.3*wheelWidth), connectionHeight, -2.5 * 10.f + wheelRadius);
 	vehicle[CarHandel]->addWheel(connectionPointCS0, btvDxv(wheelDirectionCS0), btvDxv(wheelAxleCS), suspensionRestLength, wheelRadius, m_tuning, isFrontWheel);
 
 
-	connectionPointCS0 = btVector3( boxHalfExtents.x - (0.3*wheelWidth), connectionHeight, -2.5 * 10.f + wheelRadius);
+	connectionPointCS0 = btVector3(boxHalfExtents.x - (0.3*wheelWidth), connectionHeight, -2.5 * 10.f + wheelRadius);
 	vehicle[CarHandel]->addWheel(connectionPointCS0, btvDxv(wheelDirectionCS0), btvDxv(wheelAxleCS), suspensionRestLength, wheelRadius, m_tuning, isFrontWheel);
 
-	for (int i = 0; i<vehicle[CarHandel]->getNumWheels(); i++)
+	for (int i = 0; i < vehicle[CarHandel]->getNumWheels(); i++)
 	{
 		btWheelInfo& wheel = vehicle[CarHandel]->getWheelInfo(i);
 		wheel.m_suspensionStiffness = suspensionStiffness;
@@ -333,15 +471,15 @@ int Bullet_physics::createCar(int *CarBodyHandel, int WorldHandle, VECTOR boxHal
 
 
 #ifdef  B2D_DEBUG_DRAW
-	// ” ‚ÌMotionState‚Ìİ’è
+	// ç®±ã®MotionStateã®è¨­å®š
 	btDefaultMotionState *fallMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
 	m_wheelShape->calculateLocalInertia(1, btVector3(0, 0, 0));
-	// ” ‚Ì‰Šúî•ñ‚ğİ’è
+	// ç®±ã®åˆæœŸæƒ…å ±ã‚’è¨­å®š
 	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCI(0, fallMotionState, m_wheelShape, btVector3(0, 0, 0));
-	// ” ‚Ì„‘Ì‚Ìì¬
-	en = new btRigidBody(fallRigidBodyCI);//ƒ|ƒCƒ“ƒ^‰Šú‰»«‚±‚Ìƒ|ƒCƒ“ƒ^‚ÉFX’Ç‰Á‚·‚é
+	// ç®±ã®å‰›ä½“ã®ä½œæˆ
+	en = new btRigidBody(fallRigidBodyCI);//ãƒã‚¤ãƒ³ã‚¿åˆæœŸåŒ–â†“ã“ã®ãƒã‚¤ãƒ³ã‚¿ã«è‰²ã€…è¿½åŠ ã™ã‚‹
 	fallMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
-	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCII(0, fallMotionState, m_wheelShape, btVector3(0,0,0));
+	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCII(0, fallMotionState, m_wheelShape, btVector3(0, 0, 0));
 	en2 = new btRigidBody(fallRigidBodyCII);
 	fallMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
 	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCIII(0, fallMotionState, m_wheelShape, btVector3(0, 0, 0));
@@ -349,7 +487,7 @@ int Bullet_physics::createCar(int *CarBodyHandel, int WorldHandle, VECTOR boxHal
 	fallMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
 	btRigidBody::btRigidBodyConstructionInfo fallRigidBodyCIIII(0, fallMotionState, m_wheelShape, btVector3(0, 0, 0));
 	en4 = new btRigidBody(fallRigidBodyCIIII);
-	// ƒ[ƒ‹ƒh‚É” ‚Ì„‘Ì‚ğ’Ç‰Á
+	// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã«ç®±ã®å‰›ä½“ã‚’è¿½åŠ 
 	dynamicsWorld[WorldHandle]->addRigidBody(en, 1, 2);
 	dynamicsWorld[WorldHandle]->addRigidBody(en2, 1, 2);
 	dynamicsWorld[WorldHandle]->addRigidBody(en3, 1, 2);
@@ -395,7 +533,7 @@ void Bullet_physics::controlCar(int CarHandel, float gEngineForce, float gBreaki
 void Bullet_physics::controlWheel(int CarHandel, int CarModelHandel, int frameFL, int frameFR, int frameRL, int frameRR)
 {
 	int i;
-	for (i = 0; i<vehicle[CarHandel]->getNumWheels(); i++)
+	for (i = 0; i < vehicle[CarHandel]->getNumWheels(); i++)
 	{
 		vehicle[CarHandel]->updateWheelTransform(i, true);
 
@@ -403,14 +541,14 @@ void Bullet_physics::controlWheel(int CarHandel, int CarModelHandel, int frameFL
 
 		//VECTOR pos = btVGet(w_trans.getOrigin());
 
-		btScalar Steering = vehicle[CarHandel]->getSteeringValue(i);//ƒXƒeƒAƒŠƒ“ƒO
+		btScalar Steering = vehicle[CarHandel]->getSteeringValue(i);//ã‚¹ãƒ†ã‚¢ãƒªãƒ³ã‚°
 
 		btMatrix3x3 wrt = vehicle[CarHandel]->getWheelTransformWS(i).getBasis();
 		btVector3 euler;
 		wrt.getEulerZYX(euler[2], euler[1], euler[0]);
 
-		//À•W‚ğ“¾‚é¨getOrigin
-		//‰ñ“]‚ğ“¾‚é¨getBasis
+		//åº§æ¨™ã‚’å¾—ã‚‹â†’getOrigin
+		//å›è»¢ã‚’å¾—ã‚‹â†’getBasis
 
 		MATRIX Matrix;
 		switch (i)
@@ -432,7 +570,7 @@ void Bullet_physics::controlWheel(int CarHandel, int CarModelHandel, int frameFL
 		case 2:
 			MV1ResetFrameUserLocalMatrix(CarModelHandel, frameFR);
 			Matrix = MGetIdent();
-			Matrix = MMult(MGetRotX(-btVGet(euler).x), MGetRotY(Steering));//Y‚ğæ‚É‰ñ‚³‚È‚¢‚Æ‚¨‚©‚µ‚­‚È‚é‚Ì‚Å’ˆÓ
+			Matrix = MMult(MGetRotX(-btVGet(euler).x), MGetRotY(Steering));//Yã‚’å…ˆã«å›ã•ãªã„ã¨ãŠã‹ã—ããªã‚‹ã®ã§æ³¨æ„
 			//Matrix = MMult(Matrix, MGetTranslate(pos));
 			MV1SetFrameUserLocalMatrix(CarModelHandel, frameFR, Matrix);
 			break;
@@ -464,24 +602,31 @@ int Bullet_physics::createCharacter(int WorldHandle, VECTOR pos, float stepHeigh
 	ghostObject.push_back(new btPairCachingGhostObject());
 	ghostObject[CharacterHandel]->setWorldTransform(startTransform);
 
-	//ƒ\ƒtƒgƒ[ƒ‹ƒh‚Ì
+	//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã®æ™‚
 	if (UseSoftWorld)
 	{
-		SoftWorldBroadphase[WorldHandle]->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());//‚±‚±‚É‚±‚ê‚ª‚È‚¢‚Æ’n–Ê‚ğ“Ë‚«”²‚¯‚Ü‚·
+		SoftWorldBroadphase[WorldHandle]->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());//ã“ã“ã«ã“ã‚ŒãŒãªã„ã¨åœ°é¢ã‚’çªãæŠœã‘ã¾ã™
 	}
 	else
 	{
-		broadphase[WorldHandle]->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());//‚±‚±‚É‚±‚ê‚ª‚È‚¢‚Æ’n–Ê‚ğ“Ë‚«”²‚¯‚Ü‚·
+		broadphase[WorldHandle]->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());//ã“ã“ã«ã“ã‚ŒãŒãªã„ã¨åœ°é¢ã‚’çªãæŠœã‘ã¾ã™
 	}
 
 	btConvexShape* capsule = new btCapsuleShape(characterWidth, characterHeight);
 	ghostObject[CharacterHandel]->setCollisionShape(capsule);
-	ghostObject[CharacterHandel]->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	btVector3 tes = btvDxv(VGet(0,100,0));
+	ghostObject[CharacterHandel]->getCollisionShape()->calculateLocalInertia(btScalar(10.f), tes);
+	//ghostObject[CharacterHandel]->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	//ãƒ¢ãƒã«å½“ãŸã£ã¦ã‚‚å‹•ã‹ãªããªã‚‹è¨­å®šâ†“
+	ghostObject[CharacterHandel]->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
 	//m_ghostObject->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
 
 	character.push_back(new btKinematicCharacterController(ghostObject[CharacterHandel], capsule, stepHeight));
 
-	//ƒ\ƒtƒgƒ[ƒ‹ƒh‚Ì
+	//ã“ã‚Œã‚’è¨­å®šã—ãªã„ã¨ãŠã‹ã—ããªã‚‹
+	character[CharacterHandel]->setGravity(btVector3(0, -9.8f, 0));
+
+	//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã®æ™‚
 	if (UseSoftWorld)
 	{
 		softWorld[WorldHandle]->addCollisionObject(ghostObject[CharacterHandel], btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
@@ -508,7 +653,7 @@ int Bullet_physics::createCharacter(int WorldHandle, VECTOR pos, float stepHeigh
 	return CharacterHandel;
 }
 
-void Bullet_physics::controlCharacter(int CharacterHandel, int Left, int Right, int Forward, int Backward, int Jump , float walkspeed)
+btVector3 Bullet_physics::controlCharacter(int CharacterHandel, int Left, int Right, int Forward, int Backward, int Jump, float walkspeed, float TurningSpeed)
 {
 	///set walkDirection for our character
 	btTransform xform;
@@ -525,13 +670,14 @@ void Bullet_physics::controlCharacter(int CharacterHandel, int Left, int Right, 
 	btVector3 updir = btVector3(0.0, 4.0, 0.0);
 
 	btVector3 walkDirection;
-	if (character[CharacterHandel]->onGround())//’n–Ê‚Ìã‚É‚¢‚È‚¢‚¾‚¯d—Í‚ğ‚©‚¯‚é
+	if (character[CharacterHandel]->onGround())//åœ°é¢ã®ä¸Šã«ã„ãªã„æ™‚ã ã‘é‡åŠ›ã‚’ã‹ã‘ã‚‹
 	{
-		walkDirection = btVector3(0.0, -0.001, 0.0);
+		walkDirection = btVector3(0.0, 0.0, 0.0);
 	}
 	else
 	{
-		walkDirection = btVector3(0.0, -3.0, 0.0);
+		//walkDirection = btVector3(0.0, -3.0, 0.0);
+		walkDirection = btVector3(0.0, -0.2, 0.0);
 	}
 
 	btScalar walkVelocity = btScalar(walkspeed); // 4 km/h -> 1.1 m/s
@@ -541,14 +687,14 @@ void Bullet_physics::controlCharacter(int CharacterHandel, int Left, int Right, 
 	if (Left)
 	{
 		btMatrix3x3 orn = ghostObject[CharacterHandel]->getWorldTransform().getBasis();
-		orn *= btMatrix3x3(btQuaternion(btVector3(0, 1, 0), 0.03));
+		orn *= btMatrix3x3(btQuaternion(btVector3(0, 1, 0), TurningSpeed));
 		ghostObject[CharacterHandel]->getWorldTransform().setBasis(orn);
 	}
 
 	if (Right)
 	{
 		btMatrix3x3 orn = ghostObject[CharacterHandel]->getWorldTransform().getBasis();
-		orn *= btMatrix3x3(btQuaternion(btVector3(0, 1, 0), -0.03));
+		orn *= btMatrix3x3(btQuaternion(btVector3(0, 1, 0), -TurningSpeed));
 		ghostObject[CharacterHandel]->getWorldTransform().setBasis(orn);
 	}
 
@@ -568,7 +714,7 @@ void Bullet_physics::controlCharacter(int CharacterHandel, int Left, int Right, 
 	btBroadphasePairArray& pairArray = m_ghostObject->getOverlappingPairCache()->getOverlappingPairArray();
 	int numPairs = pairArray.size();
 
-	for (int i = 0; i<numPairs; i++)
+	for (int i = 0; i < numPairs; i++)
 	{
 		manifoldArray.clear();
 
@@ -581,19 +727,21 @@ void Bullet_physics::controlCharacter(int CharacterHandel, int Left, int Right, 
 		if (collisionPair->m_algorithm)
 			collisionPair->m_algorithm->getAllContactManifolds(manifoldArray);
 
-		for (int j = 0; j<manifoldArray.size(); j++)
+		for (int j = 0; j < manifoldArray.size(); j++)
 		{
 			btPersistentManifold* manifold = manifoldArray[j];
-			for (int p = 0; p<manifold->getNumContacts(); p++)
+			for (int p = 0; p < manifold->getNumContacts(); p++)
 			{
 				const btManifoldPoint&pt = manifold->getContactPoint(p);
 
 				btVector3 color(255, 255, 255);
 				dynamicsWorld->getDebugDrawer()->drawContactPoint(pt.getPositionWorldOnB(), pt.m_normalWorldOnB, pt.getDistance(), pt.getLifeTime(), color);
 			}
-		}
+}
 	}
 #endif
+
+	return walkDirection * walkSpeed;
 }
 
 btPairCachingGhostObject* Bullet_physics::getbtGhostObject(int CaracterHandel)
@@ -612,7 +760,7 @@ int Bullet_physics::pretendCreateCharacter()
 
 	ghostObject.push_back(new btPairCachingGhostObject());
 
-	character.push_back(new btKinematicCharacterController(ghostObject[CharacterHandel], 0,0));
+	character.push_back(new btKinematicCharacterController(ghostObject[CharacterHandel], 0, 0));
 
 	return CharacterHandel;
 }
@@ -627,7 +775,7 @@ btQuaternion Bullet_physics::getCharacterRotRaw(int CaracterHandel)
 {
 	btQuaternion q = ghostObject[CaracterHandel]->getWorldTransform().getRotation();
 
-	return btQuaternion(q.getX(), q.getY(), q.getZ(),q.getW());
+	return btQuaternion(q.getX(), q.getY(), q.getZ(), q.getW());
 }
 
 VECTOR Bullet_physics::getCharacterPos(int CaracterHandel, VECTOR subtractVC)
@@ -647,6 +795,18 @@ VECTOR Bullet_physics::getCharacterRot(int CaracterHandel)
 	return Rot;
 }
 
+void Bullet_physics::setCharacterTurningSpeed(int CharacterHandel, FLOAT dir)
+{
+	btMatrix3x3 orn = ghostObject[CharacterHandel]->getWorldTransform().getBasis();
+	orn *= btMatrix3x3(btQuaternion(btVector3(0, 1, 0), dir));
+	ghostObject[CharacterHandel]->getWorldTransform().setBasis(orn);
+}
+
+void Bullet_physics::setCharacterDirection(int CharacterHandel,btVector3 dir)
+{
+	character[CharacterHandel]->setWalkDirection(dir);
+}
+
 int Bullet_physics::createSoftWorld(VECTOR WorldMin, VECTOR WorldMax, int maxProxies, VECTOR Gravity)
 {
 	SoftWorldHandel++;
@@ -662,11 +822,11 @@ int Bullet_physics::createSoftWorld(VECTOR WorldMin, VECTOR WorldMax, int maxPro
 
 	m_softBodyWorldInfo.m_dispatcher = m_dispatcher;
 
-	// ƒ[ƒ‹ƒh‚ÌL‚³
+	// ãƒ¯ãƒ¼ãƒ«ãƒ‰ã®åºƒã•
 	btVector3 worldAabbMin = btvDxv(WorldMin);
 	btVector3 worldAabbMax = btvDxv(WorldMax);
 
-	// broadphase‚Ìì¬iSAP–@j
+	// broadphaseã®ä½œæˆï¼ˆSAPæ³•ï¼‰
 	SoftWorldBroadphase.push_back(new btAxisSweep3(worldAabbMin, worldAabbMax, maxProxies));
 
 	m_softBodyWorldInfo.m_broadphase = SoftWorldBroadphase[SoftWorldHandel];
@@ -677,7 +837,7 @@ int Bullet_physics::createSoftWorld(VECTOR WorldMin, VECTOR WorldMax, int maxPro
 
 	btSoftBodySolver* softBodySolver = 0;
 
-	softWorld.push_back( new btSoftRigidDynamicsWorld(m_dispatcher, SoftWorldBroadphase[SoftWorldHandel], m_solver, m_collisionConfiguration, softBodySolver));
+	softWorld.push_back(new btSoftRigidDynamicsWorld(m_dispatcher, SoftWorldBroadphase[SoftWorldHandel], m_solver, m_collisionConfiguration, softBodySolver));
 	//m_dynamicsWorld = world;
 	//m_dynamicsWorld->setInternalTickCallback(pickingPreTickCallback, this, true);
 
@@ -694,7 +854,7 @@ int Bullet_physics::createSoftWorld(VECTOR WorldMin, VECTOR WorldMax, int maxPro
 	m_softBodyWorldInfo.water_normal = btVector3(0, 0, 0);
 	m_softBodyWorldInfo.m_gravity.setValue(0, -10, 0);
 
-	//ƒ\ƒtƒgƒ[ƒ‹ƒh‚É„‘Ì‚ğ’Ç‰Á‚·‚éƒtƒ‰ƒO‚ğ—LŒø‰»
+	//ã‚½ãƒ•ãƒˆãƒ¯ãƒ¼ãƒ«ãƒ‰ã«å‰›ä½“ã‚’è¿½åŠ ã™ã‚‹ãƒ•ãƒ©ã‚°ã‚’æœ‰åŠ¹åŒ–
 	UseSoftWorld = 1;
 
 	return SoftWorldHandel;
@@ -764,13 +924,13 @@ int Bullet_physics::createSoftBodyConvexHull(int ModelHandel, int SoftWorldHandl
 {
 	SoftBodyHandel++;
 
-	// ƒ‚ƒfƒ‹‘S‘Ì‚ÌQÆ—pƒƒbƒVƒ…‚ğ\’z
+	// ãƒ¢ãƒ‡ãƒ«å…¨ä½“ã®å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥ã‚’æ§‹ç¯‰
 	MV1SetupReferenceMesh(ModelHandel, -1, TRUE);
 
-	// QÆ—pƒƒbƒVƒ…î•ñ‚Ìæ“¾
+	// å‚ç…§ç”¨ãƒ¡ãƒƒã‚·ãƒ¥æƒ…å ±ã®å–å¾—
 	MV1_REF_POLYGONLIST RefPoly = MV1GetReferenceMesh(ModelHandel, -1, TRUE);
 
-	std::vector< btVector3 > vertices;//’¸“_
+	std::vector< btVector3 > vertices;//é ‚ç‚¹
 
 	for (int i = 0; i < RefPoly.PolygonNum; i++)
 	{
@@ -785,88 +945,27 @@ int Bullet_physics::createSoftBodyConvexHull(int ModelHandel, int SoftWorldHandl
 
 	}
 
-	//¶¬
+	//ç”Ÿæˆ
 	Softbody.push_back(new btSoftBody(&m_softBodyWorldInfo));//?
 
-	//CreateFromTriMesh‚Å‚Í‚È‚­CreateFromConvexHull‚É‚µ‚½‚ço—ˆ‚Ü‚µ‚½												«‚í‚©‚ç‚È‚¢‚©‚ç“K“–‚É
-	Softbody[SoftBodyHandel] = btSoftBodyHelpers::CreateFromConvexHull(m_softBodyWorldInfo, vertices.data(), RefPoly.PolygonNum * 2);//“ÊŒ^
+	//CreateFromTriMeshã§ã¯ãªãCreateFromConvexHullã«ã—ãŸã‚‰å‡ºæ¥ã¾ã—ãŸ												â†“ã‚ã‹ã‚‰ãªã„ã‹ã‚‰é©å½“ã«
+	Softbody[SoftBodyHandel] = btSoftBodyHelpers::CreateFromConvexHull(m_softBodyWorldInfo, vertices.data(), RefPoly.PolygonNum * 2);//å‡¸å‹
 
-	Softbody[SoftBodyHandel]->m_cfg.collisions |= btSoftBody::fCollision::VF_SS;//‘¼‚Ìƒ\ƒtƒgƒ{ƒfƒB‚Æ‚ÌÕ“Ë‚ğ—LŒø‰»
+	Softbody[SoftBodyHandel]->m_cfg.collisions |= btSoftBody::fCollision::VF_SS;//ä»–ã®ã‚½ãƒ•ãƒˆãƒœãƒ‡ã‚£ã¨ã®è¡çªã‚’æœ‰åŠ¹åŒ–
 
 	Softbody[SoftBodyHandel]->setTotalMass(1, true);
 
 	Softbody[SoftBodyHandel]->setPose(true, true);
 	Softbody[SoftBodyHandel]->m_cfg.kMT = 0.1;
 
-	Softbody[SoftBodyHandel]->transform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 10, 100)));//‰ŠúˆÊ’u‚Ìİ’è 
+	Softbody[SoftBodyHandel]->transform(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 10, 100)));//åˆæœŸä½ç½®ã®è¨­å®š 
 
 	softWorld[SoftWorldHandle]->addSoftBody(Softbody[SoftBodyHandel]);
 
 	return SoftBodyHandel;
 }
 
-int Bullet_physics::createSoftBodyFromTriMesh(char *FileName, int SoftWorldHandle, VECTOR Scale, VECTOR Pos, VECTOR Rot, float mass)
-{
-	SoftBodyHandel++;
-
-	// 3Dƒtƒ@ƒCƒ‹“Ç‚İ‚İ
-	rxPolygons poly;
-	RxModel::Read(FileName, poly);
-
-	int vertex_count = (int)poly.vertices.size(); // ‘’¸“_”
-	int index_count = (int)poly.faces.size(); // ‘ƒ|ƒŠƒSƒ“”
-	btScalar *vertices = new btScalar[vertex_count * 3]; // ’¸“_À•W‚ğŠi”[‚·‚é”z—ñ
-	int *indices = new int[index_count * 3]; // ƒ|ƒŠƒSƒ“‚ğ\¬‚·‚é’¸“_”Ô†‚ğŠi”[‚·‚é”z—ñ
-	// ’¸“_À•W‚Ìæ‚èo‚µ
-	for (int i = 0; i < vertex_count; ++i){
-		vertices[3 * i] = poly.vertices[i][0];
-		vertices[3 * i + 1] = poly.vertices[i][1];
-		vertices[3 * i + 2] = poly.vertices[i][2];
-	}
-	// ƒ|ƒŠƒSƒ“‚ğ\¬‚·‚é’¸“_”Ô†‚Ìæ‚èo‚µ
-	for (int i = 0; i < index_count; ++i){
-		indices[3 * i] = poly.faces[i][0];
-		indices[3 * i + 1] = poly.faces[i][1];
-		indices[3 * i + 2] = poly.faces[i][2];
-	}
-
-	// OŠpƒƒbƒVƒ…‚©‚çSoftBody‚ğì¬ibtSoftBodyHelpers‚ğg—pj
-	//objƒtƒ@ƒCƒ‹‚©‚ç‚µ‚©³í‚ÉÀs‚Å‚«‚Ü‚¹‚ñ
-	Softbody.push_back(new btSoftBody(&m_softBodyWorldInfo));
-	Softbody[SoftBodyHandel] = btSoftBodyHelpers::CreateFromTriMesh(m_softBodyWorldInfo, vertices, indices, index_count, false);
-	Softbody[SoftBodyHandel]->getCollisionShape()->setMargin(0.01);
-
-	Softbody[SoftBodyHandel]->scale(btVector3(Scale.x, Scale.y, Scale.z));
-
-	//‹ß‚­‚Ì’¸“_‚ğ˜AŒ‹‚·‚é
-	Softbody[SoftBodyHandel]->generateBendingConstraints(10.f);
-
-	//Õ“ËƒNƒ‰ƒXƒ^‚ğ—LŒø‰»
-	Softbody[SoftBodyHandel]->generateClusters(index_count);
-	Softbody[SoftBodyHandel]->m_cfg.collisions = btSoftBody::fCollision::CL_SS +
-		btSoftBody::fCollision::CL_RS;
-
-	//ƒ‰ƒ“ƒ_ƒ€‚É‘I‚ñ‚¾’¸“_ŠÔ‚ğS‘©A‘S‘Ì‚ÌŒ`ó‚ğ•Û‚Â
-	//randomizeConstraints‚ğ‚·‚é‚Æface(OŠpŒ`ƒ|ƒŠƒSƒ“)‚Ì‡”Ô‚ª•Ï‚í‚Á‚Ä‚µ‚Ü‚¤‚Ì‚Å’ˆÓ‚·‚é
-	//Softbox->randomizeConstraints();
-
-	Softbody[SoftBodyHandel]->setPose(1, 1);
-	Softbody[SoftBodyHandel]->m_cfg.kMT = 0.5;
-
-	//ˆÊ’u
-	Softbody[SoftBodyHandel]->transform(btTransform(btQuaternion(Rot.x, Rot.y, Rot.z, 1), btVector3(Pos.x, Pos.y, Pos.z)));
-
-	//¿—Ê
-	Softbody[SoftBodyHandel]->setTotalMass(mass);
-
-	Softbody[SoftBodyHandel]->m_cfg.kDP = 0.5;//ƒ_ƒ“ƒp[
-
-	softWorld[SoftWorldHandle]->addSoftBody(Softbody[SoftBodyHandel]);
-
-	return SoftBodyHandel;
-}
-
-void Bullet_physics::addAnchor(int SoftBodyHandel ,int node, int RigidBodyHandel, bool InvalidCollision, float influence)
+void Bullet_physics::addAnchor(int SoftBodyHandel, int node, int RigidBodyHandel, bool InvalidCollision, float influence)
 {
 	Softbody[SoftBodyHandel]->appendAnchor(node, body[RigidBodyHandel], InvalidCollision, influence);
 }
