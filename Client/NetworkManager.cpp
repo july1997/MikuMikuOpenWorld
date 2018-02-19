@@ -149,7 +149,7 @@ void NetworkManager::update()
 					dstr.erase(0, id.length() + 1);
 					if (result == "SUCCESS") {
 
-						network.setid(stoi(dstr));
+						network.setid(stoi(id));
 					}
 					else if (result == "FAILURE") network.setid(-1);
 					else if (result == "MISTAKE_TOO_MUCH")network.setid(-2);

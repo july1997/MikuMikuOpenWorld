@@ -42,7 +42,7 @@ public:
 
 	int sendChat(string str);
 private:
-	std::string coneection = std::string("118.27.12.173");
+	std::string coneection = std::string("127.0.0.1");
 
 	bool cpt = 0;
 	vector<string> chatmessege;
