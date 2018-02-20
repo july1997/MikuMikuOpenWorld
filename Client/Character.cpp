@@ -289,7 +289,7 @@ void Character::stateManager()
 			//	timer2 = 122.f;
 			//}
 		}
-		if (state == "run" && state.find("dash") == std::string::npos && shifttimer > 80) {
+		if (state == "run" && state.find("dash") == std::string::npos && shifttimer > 60) {
 			state = "dash_s";
 			inputstate = state;
 		}
@@ -434,8 +434,8 @@ void Character::animeControl()
 				time = timer2;
 				timer2 = 0;
 			}
+			timer2 += 0.5;
 		}
-		timer2 += 0.5;
 	}
 	if (state == "back_e") {
 		if (switchAnime(nowAni, 0, timer2)) {
@@ -460,8 +460,8 @@ void Character::animeControl()
 				time = timer2;
 				timer2 = 0;
 			}
+			timer2 += 0.5;
 		}
-		timer2 += 0.5;
 	}
 	if (state == "dash_e") {
 		if (switchAnime(nowAni, 5, timer2)) {
@@ -476,8 +476,7 @@ void Character::animeControl()
 }
 
 void Character::debug() {
-	DrawFormatString(0, 0, -1, "state %s\n nowAni %d  time %f \n timer2 %f Rate %f", state.c_str(), nowAni, time, timer2, Rate);
-
+	DrawFormatString(0, 0, -1, "state %s\n nowAni %d  time %f \n timer2 %f Rate %f\n xyz %f %f %f", state.c_str(), nowAni, time, timer2, Rate, getPos().x, getPos().y, getPos().z);
 }
 
 void Character::update()
@@ -522,7 +521,7 @@ void Character::setState(std::string state_)
 
 int Character::setPosRotBullet(btVector3 &pos, btQuaternion &q)
 {
-	bullet->getbtGhostObject(caharacter)->setWorldTransform(btTransform(q, pos));
+	bullet->setCharacterPosRot(caharacter, bullet->btVGet(pos),q);
 
 	return 0;
 }

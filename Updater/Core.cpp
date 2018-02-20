@@ -19,7 +19,7 @@ size_t Core::setup()
 	//画面モード
 	SetGraphMode(1280, 720, 32);
 	ChangeWindowMode(1);
-	SetMainWindowText("MikuMikuOpenWorld");//ウィンドウモード
+	SetMainWindowText("MikuMikuOpenWorld Updater");//ウィンドウモード
 
 	//　ウインドウモードの時にウインドウのサイズを自由に変更出来るように設定する
 	SetWindowSizeChangeEnableFlag(TRUE);
@@ -27,7 +27,7 @@ size_t Core::setup()
 	SetMultiThreadFlag(TRUE);// マルチスレッドに適したモードで起動する
 
 	//ログを出力しない
-	//SetOutApplicationLogValidFlag(FALSE);
+	SetOutApplicationLogValidFlag(FALSE);
 
 	// DirectX11を使用する。
 	SetUseDirect3DVersion(DX_DIRECT3D_11);

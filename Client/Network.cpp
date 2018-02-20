@@ -339,8 +339,6 @@ int Network::makeAESKey()
 			common_key_.find(" ") == std::string::npos && common_key_iv_.find(" ") == std::string::npos)break;
 	}
 
-	WaitTimer(1000);
-
 	send(2,"AES", common_key_ + " " + common_key_iv_,0,1,1);
 
 	enc.SetKeyWithIV(key, sizeof(key), iv);

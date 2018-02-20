@@ -7,16 +7,62 @@ Scene::Scene(std::shared_ptr<NetworkManager> network_)
 	network = network_;
 
 	//画像の読み込み
-	ui.loadBackgroundImage("Picture/background.jpg");
-	font3 = ui.loadDxFont("Font/Koruri Light4.dft");
-	font2 = ui.loadDxFont("Font/Koruri Light3.dft");
-	font = ui.loadDxFont("Font/Koruri Light2.dft");
+	ui.loadBackgroundImage("System/Picture/background.jpg");
+	font3 = ui.loadDxFont("System/Font/Koruri Light4.dft");
+	font2 = ui.loadDxFont("System/Font/Koruri Light3.dft");
+	font = ui.loadDxFont("System/Font/Koruri Light2.dft");
 }
 
 
 Scene::~Scene()
 {
 }
+
+bool Scene::update()
+{
+	int r = updater.downloadRelese();
+
+	while (ProcessMessage() == 0)
+	{
+		ui.drawBackgroundImage();
+
+		ui.drawString(font2, u8"アップデートの確認中", 640, 280, 1);
+
+		fps.displayFps(1280 - 20, 0);
+		fps.measureFps();
+
+		if (r == 0)
+		{
+			if (updater.getReadSize() >= updater.getDownloadSize()) {
+				break;
+			}
+		}
+		else
+		{
+			ui.drawString(font, u8"ダウンロードに失敗　エラーコード" + to_string(r), 640, 270);
+			break;
+		}
+	}
+
+	if (updater.checkUpdate()) {
+		ui.drawBackgroundImage();
+		ui.drawString(font2, u8"アップデートの確認中", 640, 280, 1);
+		ui.drawString(font, u8"新しいバージョンが見つかりました。アップデートを行います", 640, 320, 1);
+
+		fps.displayFps(1280 - 20, 0);
+		fps.measureFps();
+
+		WaitKey();
+
+		//アップデーターを起動
+		updater.lunchUpdater();
+
+		return 1;
+	}
+	
+	return 0;
+}
+
 
 bool Scene::connect()
 {
@@ -29,7 +75,7 @@ bool Scene::connect()
 
 		ui.drawBackgroundImage();
 
-		ui.drawString(font2, u8"サーバに接続できません", 640, 280, 1, GetColor(237, 28, 36));
+		ui.drawString(font2, u8"サーバメンテナンス中です", 640, 280, 1, GetColor(237, 28, 36));
 
 		fps.displayFps(1280 - 20, 0);
 		fps.measureFps();
@@ -41,16 +87,16 @@ bool Scene::connect()
 bool Scene::login()
 {
 	if (!connect())return 0;
-
+	
 	int box = ui.makeBoxRoundedBar(400, 170, 440, 295, GetColor(145, 145, 145), 13882323, 36);
-	int input = ui.makeInputBox(260, 30, 13882323, 36, "", 0, 1);
+	int input = ui.makeInputBox(260, 30, GetColor(150, 150, 150), 36, "", 0, 1);
 	ui.activateInputBox(input);
-	int input2 = ui.makeInputBox(260, 30, 13882323, 36, "", 0, 1);
+	int input2 = ui.makeInputBox(260, 30, GetColor(150, 150, 150), 36, "", 0, 1);
 
 	int ok = ui.makeButton(u8"ログイン", font, 13882323);
 	int signup = ui.makeButton(u8"新規登録", font, 13882323);
 
-	bool warning = 0, toomis = 0, error = 0;
+	bool warning = 0, toomis = 0, error = 0, connectionerrror = 0;
 	while (ProcessMessage() == 0)
 	{
 		if (CheckHitKey(KEY_INPUT_ESCAPE) != 0)return 0;
@@ -62,7 +108,7 @@ bool Scene::login()
 
 		ui.drawBackgroundImage();
 
-		ui.drawString(font3, u8"Miku Miku Open World Ver0.0.1", 0, 0, 0, GetColor(238, 238, 238));
+		ui.drawString(font3, version, 0, 0, 0, GetColor(238, 238, 238));
 
 		ui.drawString(font2, u8"ログイン画面", 640, 200, 1);
 		ui.updateBox(box);
@@ -89,22 +135,25 @@ bool Scene::login()
 
 			if (illegalChara(mail) && illegalChara(pass) && mail.find("@") != string::npos && !toomis) {
 				int j = 0, time = 0;
-				network->startCommunication();
-				j = network->getid();
-				while (j == 0 && ProcessMessage() == 0) {
+				if (!step) {
+					network->startCommunication();
 					j = network->getid();
-					time++;
-					if (time > 600)j = -3;
-					fps.controlWaitFps();
+					while (j == 0 && ProcessMessage() == 0) {
+						j = network->getid();
+						time++;
+						if (time > 1200)j = -3;
+						fps.controlWaitFps();
+					}
 				}
-				if (j == 1) {
+				if (j == 1)step = 1; else connectionerrror = 1;
+				if(step){
 					WaitTimer(500);
 					network->login(mail, pass);
 					j = network->getid();
 					while (j == 0 && ProcessMessage() == 0) {
 						j = network->getid();
 						time++;
-						if (time > 600)j = -3;
+						if (time > 1200)j = -3;
 						fps.controlWaitFps();
 					}
 					if (j > 0) {
@@ -152,6 +201,9 @@ bool Scene::login()
 		else if (warning) {
 			ui.drawString(font, u8"入力されたメールアドレスやパスワードが正しくありません", 640, 250, 1, GetColor(237, 28, 36));
 		}
+		else if (connectionerrror) {
+			ui.drawString(font, u8"接続できません", 640, 250, 1, GetColor(237, 28, 36));
+		}
 
 		fps.displayFps(1280 - 20, 0);
 		fps.measureFps();
@@ -172,12 +224,12 @@ int Scene::regist(std::string mail, std::string pass) {
 
 	int box = ui.makeBoxRoundedBar(400, 170, 440, 295, GetColor(145, 145, 145), 13882323, 36);
 
-	int input = ui.makeInputBox(360, 30, 13882323, 36, "");
+	int input = ui.makeInputBox(360, 30, GetColor(150, 150, 150), 36, "");
 	ui.activateInputBox(input);
 
 	int ok = ui.makeButton(u8"OK", font, 13882323);
 
-	bool warning = 0;
+	bool warning = 0, connectionerrror = 0;
 	while (ProcessMessage() == 0) {
 		if (CheckHitKey(KEY_INPUT_ESCAPE) != 0)return 0;
 
@@ -203,25 +255,27 @@ int Scene::regist(std::string mail, std::string pass) {
 
 			if (Specialsymbol(name) && Invalidname(name)) {
 				int j = 0, time = 0;
-				network->startCommunication();
-				j = network->getid();
-				while (j == 0 && ProcessMessage() == 0) {
+				if (!step) {
+					network->startCommunication();
 					j = network->getid();
-					time++;
-					if (time > 600)j = -3;
-					fps.controlWaitFps();
+					while (j == 0 && ProcessMessage() == 0) {
+						j = network->getid();
+						time++;
+						if (time > 1200)j = -3;
+						fps.controlWaitFps();
+					}
 				}
-				if (j == 1) {
+				if (j == 1)step = 1; else connectionerrror = 1;
+				if(step){
 					WaitTimer(500);
 					if (network->signUp(mail, pass, name)) {
 						j = network->getid();
 						while (j == 0 && ProcessMessage() == 0) {
 							j = network->getid();
 							time++;
-							if (time > 600)j = -3;
+							if (time > 1200)j = -3;
 							fps.controlWaitFps();
 						}
-
 						if (j > 0) {
 							break;
 						}
@@ -243,10 +297,17 @@ int Scene::regist(std::string mail, std::string pass) {
 		if (warning) {
 			ui.drawString(font, u8"名前を正しく入力してください", 640, 250, 1, GetColor(237, 28, 36));
 		}
+		else if (connectionerrror) {
+			ui.drawString(font, u8"接続できません", 640, 250, 1, GetColor(237, 28, 36));
+		}
 
 		fps.displayFps(1280 - 20, 0);
 		fps.measureFps();
 	}
+
+	ui.deleteBox(box);
+	ui.deleteBox(input);
+	ui.deleteBox(ok);
 
 	return 1;
 }
@@ -311,22 +372,22 @@ bool Scene::chat()
 
 	if (!load)
 	{
-		chatbox = ui.makeBoxRoundedBar(600, 200, 340, 510, GetColor(175, 175, 175), 13882323, 36);
-		chatinputbox = ui.makeInputBox(300, 30, GetColor(175, 175, 175), 60, "", 1);
-		sousin = ui.makeButton(u8"送信", font);
+		chatbox = ui.makeBoxRoundedBar(600, 200, 340, 510, GetColor(145, 145, 145), 13882323, 36);
+		chatinputbox = ui.makeInputBox(300, 30, GetColor(120, 120, 120), 60, "", 1);
+		sousin = ui.makeButton(u8"送信", font, GetColor(120, 120, 120));
+		ui.setScroll(chatbox,45);
 		load = 1;
 	}
 
 	ui.updateBox(chatbox);
-	ui.updateSize(chatbox, 100, 50, GetColor(175, 175, 175), 13882323, 36);
+	ui.updateSize(chatbox, 100, 50, GetColor(145, 145, 145), 13882323, 36);
 	ui.drawBox(chatbox, 186);
 
 	ui.drawStringToBox(chatbox, u8"コメント", ui.getBoxWidth(chatbox) / 2, 2, font, 1);
 
-	if (ui.getBoxWidth(chatbox) - 100 > 100)ui.changeBoxRounded(chatinputbox, ui.getBoxWidth(chatbox) - 100, 30);
+	if (ui.getBoxWidth(chatbox) - 100 > 100)ui.changeBoxRounded(chatinputbox, ui.getBoxWidth(chatbox) - 100, 30, GetColor(120, 120, 120));
 
 	ui.drawInputBoxToBox(chatbox, chatinputbox, 20, ui.getBoxHeight(chatbox) - 40, font, 128);
-
 
 	ui.drawButtonToBox(chatbox, sousin, 70, 45, 72, 1);
 
@@ -341,7 +402,7 @@ bool Scene::chat()
 		ui.setInputString(chatinputbox, "");
 	}
 
-	int scroll = ui.updateScroll(chatbox, 30);
+	int scroll = ui.updateScroll(chatbox, 20);
 
 	int max = ui.getBoxHeight(chatbox) / 20 - 4;
 	if (max < 0)
@@ -383,6 +444,8 @@ void Scene::drawName()
 		VECTOR pp = ConvWorldPosToScreenPos(VGet(p.x, p.y + 15.f, p.z));
 
 		ui.drawString(font, network->players->getName(ID), (int)pp.x, (int)pp.y, 1);
+
+		if (ID == 3)ui.drawString(font, u8"管理人", (int)pp.x, (int)pp.y - 25, 1, GetColor(0, 255, 64));
 	}
 }
 
@@ -402,7 +465,7 @@ void Scene::tutorial()
 
 		ui.drawStringToBox(tutorialbox, u8"MikuMikuOpenWorld へようこそ！\n　  操作方法をご説明いたします", ui.getBoxWidth(tutorialbox) / 2, 50, font2, 1);
 
-		ui.drawStringToBox(tutorialbox, u8"視点操作 : 右クリック+ドラック　ホイール \nキャラ操作 : W前進 S後進 A左 D右\n左Shift + W 走る　左Shift長押し + W ダッシュ\n", ui.getBoxWidth(tutorialbox) / 2, 150, font, 1);
+		ui.drawStringToBox(tutorialbox, u8"視点操作 : 右クリック+ドラック　ホイール \nキャラ操作 : Wを押し続けて前進 S後進 A左 D右\n左Shift + W 走る　左Shift長押し + W ダッシュ\n", ui.getBoxWidth(tutorialbox) / 2, 150, font, 1);
 
 		ui.drawStringToBox(tutorialbox, u8"コメント送信 : 下のコメント欄の入力欄をクリック後\n入力し送信ボタンかエンターキーを押す", ui.getBoxWidth(tutorialbox) / 2, 250, font, 1);
 

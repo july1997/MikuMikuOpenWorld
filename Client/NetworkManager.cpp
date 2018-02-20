@@ -203,7 +203,8 @@ void NetworkManager::update()
 
 									players->setPosBullet(uid, bt, bq);
 
-									break;
+									dstr.erase(0, dstr.find(" ") + 1);
+
 								}
 								else {
 									dstr.erase(0, dstr.find(" ") + 1);
@@ -216,7 +217,7 @@ void NetworkManager::update()
 									dstr.erase(0, dstr.find(" ") + 1);
 								}
 							}
-							if (dstr == " ")break;
+							if (dstr == "")break;
 
 						}
 

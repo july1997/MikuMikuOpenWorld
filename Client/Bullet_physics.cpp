@@ -647,7 +647,7 @@ int Bullet_physics::createCharacter(int WorldHandle, VECTOR pos, float stepHeigh
 
 		character[CharacterHandel]->reset(dynamicsWorld[WorldHandle]);
 	}
-	///WTF
+	//WTF
 	character[CharacterHandel]->warp(btvDxv(pos));
 
 	return CharacterHandel;
@@ -767,8 +767,13 @@ int Bullet_physics::pretendCreateCharacter()
 
 void Bullet_physics::setCharacterPosRot(int CaracterHandel, VECTOR pos, btQuaternion &rot)
 {
+	//ghostObject[CaracterHandel]->setWorldTransform(btTransform(rot, btVector3(pos.x, pos.y, pos.z)));
 
-	ghostObject[CaracterHandel]->setWorldTransform(btTransform(rot, btVector3(pos.x, pos.y, pos.z)));
+	ghostObject[CaracterHandel]->getWorldTransform().setOrigin(btvDxv(pos));
+
+	if(rot.getX() == 0 && rot.getY() == 0&& rot.getZ() == 0)
+	ghostObject[CaracterHandel]->getWorldTransform().setRotation(btQuaternion(btVector3(0,1,0), rot.getAngle()));
+	else ghostObject[CaracterHandel]->getWorldTransform().setRotation(btQuaternion(rot.getAxis(), rot.getAngle()));
 }
 
 btQuaternion Bullet_physics::getCharacterRotRaw(int CaracterHandel)

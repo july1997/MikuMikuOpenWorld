@@ -31,13 +31,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetUseASyncLoadFlag(TRUE);
 
 	Model stage;
-	stage.loadModel(u8"Stage/空色町1.52/sorairo1.52.mv1");
+	stage.loadModel(u8"System/Stage/空色町1.52/sorairo1.52.mv1");
 
 	std::shared_ptr<Character> chara(new Character(bullet, world));
-	chara->loadModel(u8"Model/Tda式初音ミクV4X_Ver1.00/Tda式初音ミクV4X_Ver1.00/Tda式初音ミクV4X.mv1");
+	chara->loadModel(u8"System/Model/Tda式初音ミクV4X_Ver1.00/Tda式初音ミクV4X_Ver1.00/Tda式初音ミクV4X.mv1");
 
 	Model sky;
-	sky.loadModel(u8"Skybox/skydome/skybox.mqo");
+	sky.loadModel(u8"System/Skybox/skydome/skybox.mqo");
 	
 	//設定を戻す
 	SetUseASyncLoadFlag(FALSE);
@@ -47,6 +47,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//SetUseTextureToShader(2, specCubeTex);
 
 	Youtube yotube;
+	yotube.upgrade();
 	//while(yotube.downloadmovie("https://www.youtube.com/watch?v=wDVX2bEcJtk"))ProcessMessage();
 	//yotube.playMovie();
 
@@ -56,65 +57,68 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	std::shared_ptr<NetworkManager> network(new NetworkManager(bullet, world, chara));
 
 	Scene scene(network);
-	if (scene.login())
+	if (!scene.update())
 	{
-		scene.loading();
-
-		stage.setScale(10.f);
-		bullet->createGroundBodytoMesh(stage.getModelHandle(), world);
-
-		chara->setup();
-
-		sky.setScale(19.f);
-
-		while (ProcessMessage() == 0 && CheckHitKey(KEY_INPUT_ESCAPE) == 0)
+		if (scene.login())
 		{
-			camera.MouseCamera(stage.getModelHandle(), chara->getPos(), vp);
-			//camera.CameraAdditionally( chara.getPos(), chara.getRot(), vp);
+			scene.loading();
 
+			stage.setScale(10.f);
+			bullet->createGroundBodytoMesh(stage.getModelHandle(), world);
 
-			//yotube.update();
+			chara->setup();
 
-			chara->playAnime();
+			sky.setScale(40.f);
 
-			chara->animeControl();
+			while (ProcessMessage() == 0 && CheckHitKey(KEY_INPUT_ESCAPE) == 0)
+			{
+				camera.MouseCamera(stage.getModelHandle(), chara->getPos(), vp);
+				//camera.CameraAdditionally( chara.getPos(), chara.getRot(), vp);
+				//camera.MouseCamera(stage.getModelHandle(), MV1GetFramePosition(chara->getModelHandle(), MV1SearchFrame(chara->getModelHandle(), u8"頭")));
 
-			bullet->stepSimulation(world);
+				//yotube.update();
 
-			chara->update();
+				chara->playAnime();
 
-			network->multiplayerUpdate();
+				chara->animeControl();
 
-			sky.setPos(chara->getPos());
+				bullet->stepSimulation(world);
 
-			// ライティングの計算をしないように設定を変更
-			SetUseLighting(FALSE);
+				chara->update();
 
-			sky.draw();
+				network->multiplayerUpdate();
 
-			SetUseLighting(TRUE);
+				sky.setPos(chara->getPos());
 
-			stage.draw();
+				// ライティングの計算をしないように設定を変更
+				SetUseLighting(FALSE);
 
-			chara->draw();
+				sky.draw();
 
-			network->multiplayerDraw();
+				SetUseLighting(TRUE);
 
-			//chara->debug();
+				chara->draw();
 
-			scene.drawName();
+				network->multiplayerDraw();
 
-			scene.tutorial();
+				stage.draw();
 
-			if (!scene.chat()) {
-				chara->playerMovementKeyboard();
+				//chara->debug();
+
+				scene.drawName();
+
+				scene.tutorial();
+
+				if (!scene.chat()) {
+					chara->playerMovementKeyboard();
+				}
+				else {
+					chara->noMovement();
+				}
+
+				fps.displayFps(1280 - 20, 0);
+				fps.measureFps();
 			}
-			else {
-				chara->noMovement();
-			}
-
-			fps.displayFps(1280 - 20, 0);
-			fps.measureFps();
 		}
 	}
 

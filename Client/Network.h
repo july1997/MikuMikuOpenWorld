@@ -2,7 +2,7 @@
 
 #include "DxLib.h"
 #include "Common/fps.h"
-
+#include "Version.h"
 
 #pragma comment( lib, "cryptlib.lib" )
 #include <aes.h>
@@ -90,7 +90,6 @@ public:
 	std::string SHA256(string str);
 
 	//署名と同時にバージョン確認
-	string version = "Miku Miku Open World Ver0.0.1";
 	bool signature(string str);
 
 	//--変換系--

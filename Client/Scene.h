@@ -6,6 +6,7 @@
 
 #include "UI/UI.h"
 #include "Common/Fps.h"
+#include "Updater.h"
 
 #include <regex>
 
@@ -24,6 +25,8 @@ public:
 	void tutorial();
 
 	void loading();
+
+	bool update();
 
 private:
 
@@ -49,5 +52,9 @@ private:
 
 	bool tutorialf = 0, tutoriall = 0;
 	int tutorialbox;
+
+	bool step = 0;
+
+	Updater updater;
 };
 

@@ -1,56 +1,56 @@
-#include "Effekseer.h"
+ï»¿#include "Effekseer.h"
 
 
 
 Effekseer_DX::Effekseer_DX()
 {
-	// •`‰æ—pƒCƒ“ƒXƒ^ƒ“ƒX‚Ì¶¬
+	// æç”»ç”¨ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ç”Ÿæˆ
 	g_device = (ID3D11Device*)GetUseDirect3D11Device();
 	g_context = (ID3D11DeviceContext*)GetUseDirect3D11DeviceContext();
 
 	g_renderer = ::EffekseerRendererDX11::Renderer::Create(g_device, g_context, MAX_INSTANCE_NUM);
 
-	// ƒGƒtƒFƒNƒgŠÇ——pƒCƒ“ƒXƒ^ƒ“ƒX‚Ì¶¬
+	// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆç®¡ç†ç”¨ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ç”Ÿæˆ
 	g_manager = ::Effekseer::Manager::Create(2000);
 
-	// •`‰æ—pƒCƒ“ƒXƒ^ƒ“ƒX‚©‚ç•`‰æ‹@”\‚ğİ’è
+	// æç”»ç”¨ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‹ã‚‰æç”»æ©Ÿèƒ½ã‚’è¨­å®š
 	g_manager->SetSpriteRenderer(g_renderer->CreateSpriteRenderer());
 	g_manager->SetRibbonRenderer(g_renderer->CreateRibbonRenderer());
 	g_manager->SetRingRenderer(g_renderer->CreateRingRenderer());
 	g_manager->SetTrackRenderer(g_renderer->CreateTrackRenderer());
 	g_manager->SetModelRenderer(g_renderer->CreateModelRenderer());
 
-	// •`‰æ—pƒCƒ“ƒXƒ^ƒ“ƒX‚©‚çƒeƒNƒXƒ`ƒƒ‚Ì“Ç‹@”\‚ğİ’è
-	// “Æ©Šg’£‰Â”\AŒ»İ‚Íƒtƒ@ƒCƒ‹‚©‚ç“Ç‚İ‚ñ‚Å‚¢‚éB
+	// æç”»ç”¨ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‹ã‚‰ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®èª­è¾¼æ©Ÿèƒ½ã‚’è¨­å®š
+	// ç‹¬è‡ªæ‹¡å¼µå¯èƒ½ã€ç¾åœ¨ã¯ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰èª­ã¿è¾¼ã‚“ã§ã„ã‚‹ã€‚
 	g_manager->SetTextureLoader(g_renderer->CreateTextureLoader());
 	g_manager->SetModelLoader(g_renderer->CreateModelLoader());
 
-	// DxLib‚É‡‚í‚¹‚Ä¶èÀ•WŒn‚É•ÏX
+	// DxLibã«åˆã‚ã›ã¦å·¦æ‰‹åº§æ¨™ç³»ã«å¤‰æ›´
 	g_manager->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 
-	// ‰½‚Å‚à‚¢‚¢‚©‚ç‰æ‘œ“Ç
-	grHandle = LoadGraph("Effect/Texture/black.png");
+	// ä½•ã§ã‚‚ã„ã„ã‹ã‚‰ç”»åƒèª­è¾¼
+	grHandle = LoadGraph("System/Effect/Texture/black.png");
 
-	// ƒGƒtƒFƒNƒg‚Ì“Ç
-	g_effect = Effekseer::Effect::Create(g_manager, (const EFK_CHAR*)L"Effect/laser.efk");
+	// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®èª­è¾¼
+	g_effect = Effekseer::Effect::Create(g_manager, (const EFK_CHAR*)L"System/Effect/laser.efk");
 
-	// ƒGƒtƒFƒNƒg‚ÌÄ¶
+	// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®å†ç”Ÿ
 	g_handle = g_manager->Play(g_effect, 0, 0, 0);
 }
 
 
 Effekseer_DX::~Effekseer_DX()
 {
-	// ƒGƒtƒFƒNƒg‚Ì’â~
+	// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®åœæ­¢
 	g_manager->StopEffect(g_handle);
 
-	// ƒGƒtƒFƒNƒg‚Ì”jŠü
+	// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®ç ´æ£„
 	ES_SAFE_RELEASE(g_effect);
 
-	// æ‚ÉƒGƒtƒFƒNƒgŠÇ——pƒCƒ“ƒXƒ^ƒ“ƒX‚ğ”jŠü
+	// å…ˆã«ã‚¨ãƒ•ã‚§ã‚¯ãƒˆç®¡ç†ç”¨ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç ´æ£„
 	//g_manager->Destroy();
 
-	// Ÿ‚É•`‰æ—pƒCƒ“ƒXƒ^ƒ“ƒX‚ğ”jŠü
+	// æ¬¡ã«æç”»ç”¨ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç ´æ£„
 	g_renderer->Destroy();
 }
 
@@ -59,29 +59,29 @@ void Effekseer_DX::update()
 {
 
 	time++;
-	// ’èŠú“I‚ÉƒGƒtƒFƒNƒg‚ğÄ¶‚·‚é
+	// å®šæœŸçš„ã«ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã‚’å†ç”Ÿã™ã‚‹
 	if (time % 60 == 0)
 	{
-		// ƒGƒtƒFƒNƒg‚ÌÄ¶
+		// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®å†ç”Ÿ
 		g_handle = g_manager->Play(g_effect, 0, 0, 0);
 	}
 
-	// 3. “§‰ßƒtƒ‰ƒO‚ğ—§‚Ä‚Ä‰æ‘œ‚ğ•`‰æ
-	// (•ˆêF(RGB = (0, 0, 0))‚Ì‰æ‘œ‚ğ—pˆÓI)
+	// 3. é€éãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã¦ç”»åƒã‚’æç”»
+	// (é»’ä¸€è‰²(RGB = (0, 0, 0))ã®ç”»åƒã‚’ç”¨æ„ï¼)
 	DrawGraph(0, 0, grHandle, TRUE);
 
-	// ’¸“_ƒoƒbƒtƒ@‚É—­‚Ü‚Á‚½’¸“_ƒf[ƒ^‚ğ“f‚«o‚·
+	// é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã«æºœã¾ã£ãŸé ‚ç‚¹ãƒ‡ãƒ¼ã‚¿ã‚’åãå‡ºã™
 	RenderVertex();
 
-	// ƒGƒtƒFƒNƒg‚ÌˆÚ“®ˆ—‚ğs‚¤
+	// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®ç§»å‹•å‡¦ç†ã‚’è¡Œã†
 	g_manager->AddLocation(g_handle, ::Effekseer::Vector3D(0.2f, 0.0f, 0.0f));
 
-	// ƒGƒtƒFƒNƒg‚ÌXVˆ—
+	// ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®æ›´æ–°å‡¦ç†
 	g_manager->Update();
 
-	// DXƒ‰ƒCƒuƒ‰ƒŠ‘¤‚ÌƒJƒƒ‰s—ñEË‰es—ñ‚Æ
-	// Effekseer‘¤‚ÌƒJƒƒ‰s—ñEË‰es—ñ‚Ì“¯Šú
-	// “Š‰es—ñ‚ğİ’è
+	// DXãƒ©ã‚¤ãƒ–ãƒ©ãƒªå´ã®ã‚«ãƒ¡ãƒ©è¡Œåˆ—ãƒ»å°„å½±è¡Œåˆ—ã¨
+	// Effekseerå´ã®ã‚«ãƒ¡ãƒ©è¡Œåˆ—ãƒ»å°„å½±è¡Œåˆ—ã®åŒæœŸ
+	// æŠ•å½±è¡Œåˆ—ã‚’è¨­å®š
 	MATRIX m = GetCameraProjectionMatrix();
 	::Effekseer::Matrix44 f;
 	for (int i = 0; i < 4; i++) {
@@ -92,7 +92,7 @@ void Effekseer_DX::update()
 	}
 	g_renderer->SetProjectionMatrix(f);
 
-	// ƒJƒƒ‰s—ñ‚ğİ’è
+	// ã‚«ãƒ¡ãƒ©è¡Œåˆ—ã‚’è¨­å®š
 	m = GetCameraViewMatrix();
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j<4; j++)
@@ -102,15 +102,15 @@ void Effekseer_DX::update()
 	}
 	g_renderer->SetCameraMatrix(f);
 	ClearDrawScreen();
-	// 4. ƒGƒtƒFƒNƒg‚Ì•`‰æŠJnˆ—
+	// 4. ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®æç”»é–‹å§‹å‡¦ç†
 	g_renderer->BeginRendering();
 
-	// 5. Effekseer‘¤‚ÌƒGƒtƒFƒNƒg•\¦
+	// 5. Effekseerå´ã®ã‚¨ãƒ•ã‚§ã‚¯ãƒˆè¡¨ç¤º
 	g_manager->Draw();
 
-	// 6. ƒGƒtƒFƒNƒg‚Ì•`‰æI—¹ˆ—
+	// 6. ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®æç”»çµ‚äº†å‡¦ç†
 	g_renderer->EndRendering();
 
-	// 7. DXƒ‰ƒCƒuƒ‰ƒŠ‚Ìİ’è‚ğ–ß‚·
+	// 7. DXãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®è¨­å®šã‚’æˆ»ã™
 	RefreshDxLibDirect3DSetting();
 }

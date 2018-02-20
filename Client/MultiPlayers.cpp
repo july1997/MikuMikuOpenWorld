@@ -123,7 +123,12 @@ void MultiPlayers::draw()
 		oldd[i] = VAdd(d[i], kd[i]);
 		players[i]->setDirection(oldd[i]);
 
-		players[i]->draw();
+		// 画面内に座標が入っていないかどうかを描画する
+		if (CheckCameraViewClip(players[i]->getPos()) == FALSE) {
+
+			players[i]->draw();
+
+		}
 	}
 }
 

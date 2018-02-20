@@ -32,14 +32,14 @@ size_t Youtube::downloadmovie(std::string VideoURL)
 	case 2:
 		if (VideoURL.find("https://www.youtube.com/watch?") != std::string::npos)
 		{
-			exe = std::string("cache/youtube-dl.exe");
+			exe = std::string("System\\cache\\youtube-dl.exe");
 			std::string pa("-f best[height=360] --no-part -o cache/cache.mp4 ");
 			std::string th(VideoURL);
 			path = pa + th;
 		}
 		else
 		{
-			exe = std::string("cache/youtube-dl.exe");
+			exe = std::string("System\\cache\\youtube-dl.exe");
 			std::string pa("--no-part -o cache/cache.mp4 ");
 			std::string th(VideoURL);
 			path = pa + th;
@@ -73,7 +73,7 @@ size_t Youtube::downloadmovie(std::string VideoURL)
 
 void Youtube::playMovie()
 {
-	screen_handel = LoadGraph("cache/cache.mp4");
+	screen_handel = LoadGraph("System/cache/cache.mp4");
 	PlayMovieToGraph(screen_handel);
 }
 
@@ -114,7 +114,7 @@ bool Youtube::deleteCache()
 	if (!deleteCacheflag)
 	{
 		//前のキャッシュがあったら消す
-		DeleteFile("cache/cache.mp4");
+		DeleteFile("System/cache/cache.mp4");
 
 		deleteCacheflag = 1;
 
@@ -122,7 +122,7 @@ bool Youtube::deleteCache()
 	}
 
 	//消えるまで待つ
-	if (stat("cache/cache.mp4", &buf) != 0)deleteCacheflag = 0;
+	if (stat("System/cache/cache.mp4", &buf) != 0)deleteCacheflag = 0;
 
 	timer++;
 	if (timer == 30 * 10)deleteCacheflag = 0;
@@ -133,7 +133,7 @@ bool Youtube::deleteCache()
 bool Youtube::upgrade()
 {
 	if (!upgradeflag) {
-		exe = std::string("cache/youtube-dl.exe");
+		exe = std::string("System\\cache\\youtube-dl.exe");
 		std::string c("-U ");
 
 		yotube_dl(exe.c_str(), c.c_str());
