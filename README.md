@@ -1,4 +1,4 @@
-# MikuMikuOpenWorld β0.0.1<br>
+https://raw.githubusercontent.com/july1997/MikuMikuOpenWorld/master/LICENSE.txt# MikuMikuOpenWorld β0.0.1<br>
 MikuMikuDanceを始めとするコンテンツにゲームに使えそうなものが多くあります。<br>
 そのような既存の素材を利用し、オープンワールドのゲームを作ろうというものです<br>
 <br>
@@ -11,7 +11,7 @@ MikuMikuDanceを始めとするコンテンツにゲームに使えそうなも�
  2018/02/19 0.0.1　アップロード<br>
 <br>
 
-[License (MIT)](https://github.com/july1997/MikuMikuOpenWorld/master/LICENSE.txt)
+[License (MIT)](https://raw.githubusercontent.com/july1997/MikuMikuOpenWorld/master/LICENSE.txt)
 
 Copyright (C) 2015-2018 july. All rights reserved.<br>
 <br>
