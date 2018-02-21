@@ -6,14 +6,13 @@ MikuMikuDanceを始めとするコンテンツにゲームに使えそうなも�
 ・ダウンロード<br>
 * [Cliant 0.0.2 (zip)](https://github.com/july1997/MikuMikuOpenWorld/releases/download/Ver0.0.2/MikuMikuOpenWorld.zip)<br>
 <br>
-<br>
 ・更新履歴<br>
  2018/02/21 0.0.2　更新<br>
  ・アップデーターの追加<br>
  2018/02/19 0.0.1　アップロード<br>
 <br>
 <br>
-[License (MIT)](https://github.com/july1997/MikuMikuOpenWorld/master/LICENSE.txt)<br>
+[License (MIT)](https://github.com/july1997/MikuMikuOpenWorld/master/LICENSE.txt)
 <br>
 Copyright (C) 2015-2018 july. All rights reserved.<br>
 <br>
