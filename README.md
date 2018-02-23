@@ -1,4 +1,4 @@
-# MikuMikuOpenWorld β0.0.1<br>
+# MikuMikuOpenWorld<br>
 MikuMikuDanceを始めとするコンテンツにゲームに使えそうなものが多くあります。<br>
 そのような既存の素材を利用し、オープンワールドのゲームを作ろうというものです<br>
 <br>
