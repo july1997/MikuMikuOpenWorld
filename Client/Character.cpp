@@ -172,6 +172,7 @@ void Character::playerMovementKeyboard()
 				anime[0] = attachAnime(11, &totaltime);
 				time = 0;
 				dance = 1;
+				inputstate = state;
 			}
 		}
 	}

@@ -22,7 +22,7 @@ public:
 	~Updater();
 
 	int downloadRelese();
-	bool checkUpdate();
+	int checkUpdate();
 
 	int getDownloadSize();
 	int getReadSize();

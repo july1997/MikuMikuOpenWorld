@@ -287,7 +287,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			std::string s((char*)pbBuffer);
 
 			if (s == "")timer++; else timer = 0;
-			if (timer > 100) {
+			if (timer > 1000) {
 				MessageBox(GetMainWindowHandle(), "エラーが発生しました", "error", MB_OK);
 				return 0;
 			}

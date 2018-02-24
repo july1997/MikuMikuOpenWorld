@@ -102,6 +102,10 @@ void NetworkManager::update()
 						break;
 					}
 				}
+				else if (mess == "HELP ") {
+
+					network.makeAESKey();
+				}
 
 			}
 			else if (command == (unsigned char)2) {//RSA
@@ -353,19 +357,24 @@ void NetworkManager::sendLoop()
 			//direction
 			VECTOR d = cahara->gertDirection();
 			float ts = cahara->getTurningSpeed();
-			if (VSize(d) != 0) {
+			if (VSize(d) != 0 || ts != 0.f) {
 				string dir1 = to_string(d.x);
 				string dir2 = to_string(d.y);
 				string die3 = to_string(d.z);
 				string sts = to_string(ts);
 
-				string s = (dir1.substr(0, dir1.size() - 1) + " " + dir2.substr(0, dir2.size() - 1) + " " + die3.substr(0, die3.size() - 1) + " " + sts.substr(0, sts.size() - 1));
+				string s = (dir1.substr(0, dir1.size() - 3) + " " + dir2.substr(0, dir2.size() - 3) + " " + die3.substr(0, die3.size() - 3) + " " + sts.substr(0, sts.size() - 1));
 				network.send(3, "DIR", s, 0, 1, 0, 1);
 				sendDir = 0;
 			}
 			else {
 				if (!sendDir) {
-					string s = (to_string(d.x) + " " + to_string(d.y) + " " + to_string(d.z) + " " + to_string(ts));
+					string dir1 = to_string(d.x);
+					string dir2 = to_string(d.y);
+					string die3 = to_string(d.z);
+					string sts = to_string(ts);
+
+					string s = (dir1.substr(0, dir1.size() - 3) + " " + dir2.substr(0, dir2.size() - 3) + " " + die3.substr(0, die3.size() - 3) + " " + sts.substr(0, sts.size() - 1));
 					network.send(3, "DIR", s, 0, 1, 0, 1);
 					sendDir = 1;
 				}

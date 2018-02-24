@@ -341,6 +341,8 @@ int Network::makeAESKey()
 
 	send(2,"AES", common_key_ + " " + common_key_iv_,0,1,1);
 
+	WaitTimer(500);
+
 	enc.SetKeyWithIV(key, sizeof(key), iv);
 	dec.SetKeyWithIV(key, sizeof(key), iv);
 

@@ -1,3 +1,3 @@
 #pragma once
 
-#define version "Miku Miku Open World Ver0.0.2"
+#define version "Miku Miku Open World Ver0.0.3"

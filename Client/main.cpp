@@ -31,7 +31,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetUseASyncLoadFlag(TRUE);
 
 	Model stage;
-	stage.loadModel(u8"System/Stage/空色町1.52/sorairo1.52.mv1");
+	stage.loadModel(u8"System/Stage/唄川町 ver0.10/models/唄川町Light【軽量版】ver0.10.mv1");
 
 	std::shared_ptr<Character> chara(new Character(bullet, world));
 	chara->loadModel(u8"System/Model/Tda式初音ミクV4X_Ver1.00/Tda式初音ミクV4X_Ver1.00/Tda式初音ミクV4X.mv1");
@@ -41,7 +41,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	//設定を戻す
 	SetUseASyncLoadFlag(FALSE);
-
 
 	//int specCubeTex = LoadGraph(u8"Skybox/GrandCanyon/skybox_32.dds");
 	//SetUseTextureToShader(2, specCubeTex);

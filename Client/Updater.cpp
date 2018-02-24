@@ -36,13 +36,13 @@ int Updater::getReadSize()
 	return dl->getReadSize();
 }
 
-bool Updater::checkUpdate()
+int Updater::checkUpdate()
 {
 	//ファイルの読み込み
 	std::ifstream fin("System/Update/releases.txt");
 
 	if (!fin)
-		return 1;
+		return -1;
 
 	std::stringstream strstream;
 	strstream << fin.rdbuf();

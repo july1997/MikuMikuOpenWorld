@@ -44,7 +44,7 @@ bool Scene::update()
 		}
 	}
 
-	if (updater.checkUpdate()) {
+	if (updater.checkUpdate() == 1) {
 		ui.drawBackgroundImage();
 		ui.drawString(font2, u8"アップデートの確認中", 640, 280, 1);
 		ui.drawString(font, u8"新しいバージョンが見つかりました。アップデートを行います", 640, 320, 1);
@@ -381,13 +381,13 @@ bool Scene::chat()
 
 	ui.updateBox(chatbox);
 	ui.updateSize(chatbox, 100, 50, GetColor(145, 145, 145), 13882323, 36);
-	ui.drawBox(chatbox, 186);
+	ui.drawBox(chatbox, 206);
 
 	ui.drawStringToBox(chatbox, u8"コメント", ui.getBoxWidth(chatbox) / 2, 2, font, 1);
 
 	if (ui.getBoxWidth(chatbox) - 100 > 100)ui.changeBoxRounded(chatinputbox, ui.getBoxWidth(chatbox) - 100, 30, GetColor(120, 120, 120));
 
-	ui.drawInputBoxToBox(chatbox, chatinputbox, 20, ui.getBoxHeight(chatbox) - 40, font, 128);
+	ui.drawInputBoxToBox(chatbox, chatinputbox, 20, ui.getBoxHeight(chatbox) - 40, font, 168);
 
 	ui.drawButtonToBox(chatbox, sousin, 70, 45, 72, 1);
 
@@ -400,6 +400,7 @@ bool Scene::chat()
 		}
 
 		ui.setInputString(chatinputbox, "");
+		ui.activateInputBox(-1);
 	}
 
 	int scroll = ui.updateScroll(chatbox, 20);

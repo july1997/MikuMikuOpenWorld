@@ -45,7 +45,7 @@ void Camera::MouseCamera(VECTOR camerapos, VECTOR viewpoint,VECTOR addVce)
 
 void Camera::MouseCamera(int stagemodel,VECTOR camerapos, VECTOR addVce)
 {
-	SetCameraNearFar(3.f, 4000.f);
+	SetCameraNearFar(10.f, 15000.f);
 
 	// マウス入力の取得
 	MoveX = MoveY = 0;
