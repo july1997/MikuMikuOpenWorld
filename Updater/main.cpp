@@ -1,98 +1,111 @@
 ﻿#include "DxLib.h"
 
-#include "UI/UI.h"
-#include "Core.h"
-#include "Common/Fps.h"
-#include "WebDownloader.h"
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <string>
 
+#include "UI/UI.h"
+#include "Core.h"
+#include "Common/Fps.h"
+#include "WebDownloader.h"
 
 
-//マルチスレッド関係------------------------------------------------------------------------------
+//ZIP展開 関係------------------------------------------------------------------------------
+#include "unzip.h"
+using namespace std;
 
-HANDLE m_ChildProcess;
+#pragma comment(lib, "zlib.lib")
 
-DWORD dwD;
-HANDLE hHandle;
+#define for if (0) ; else for
+#define IsShiftJIS(x) ((BYTE)((x ^ 0x20) - 0xA1) <= 0x3B)
 
-HANDLE hReadPipe;
-HANDLE hWritePipe;
-
-DWORD WINAPI ThreadFunc(PVOID pv) //マルチスレッドで行う処理
-{
-	SECURITY_ATTRIBUTES PipeAttributes;
-	ZeroMemory(&PipeAttributes, sizeof(SECURITY_ATTRIBUTES));
-
-	PipeAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-	PipeAttributes.bInheritHandle = TRUE;
-	PipeAttributes.lpSecurityDescriptor = NULL;
-
-	if (!CreatePipe(&hReadPipe, &hWritePipe, &PipeAttributes, 0))
-	{
-		// 失敗
-	}
-
-	PROCESS_INFORMATION ProcessInformation;
-	ZeroMemory(&ProcessInformation, sizeof(PROCESS_INFORMATION));
-
-	STARTUPINFO StartUpInfo;
-	ZeroMemory(&StartUpInfo, sizeof(STARTUPINFO));
-	StartUpInfo.cb = sizeof(STARTUPINFO);
-	StartUpInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-	StartUpInfo.wShowWindow = SW_HIDE; // これで、非表示
-	StartUpInfo.hStdOutput = hWritePipe;
-
-	TCHAR pCommandLine[] = _T("Update.exe -y");
-
-	if (!CreateProcess
-	(
-		NULL,
-		pCommandLine,
-		NULL,
-		NULL,
-		TRUE,
-		0,
-		NULL,
-		NULL,
-		&StartUpInfo,
-		&ProcessInformation
-	))
-	{
-		// 失敗
-	}
-
-	// プロセスハンドルを保存
-	m_ChildProcess = ProcessInformation.hProcess;
-
-	return 0;
+//---------------------------------------------------------------------------
+// ファイルが存在するかどうか
+bool IsFileExist(const string &strFilename) {
+	return GetFileAttributes(strFilename.c_str()) != 0xffffffff;
 }
 
-void update()
-{
-	static TCHAR lpszCmd[MAX_PATH + 64];
-
-	//マルチスレッドを作成-------------------------------------
-	DWORD dwThread;
-
-	hHandle = CreateThread(NULL, 0, ThreadFunc, (LPVOID)lpszCmd, 0, &dwD);
-
-	//エラーチェック
-	if (hHandle == 0)
-	{
-		MessageBox(GetMainWindowHandle(), "_beginthreadex Failed.", "error", MB_OK);//エラー表示
-	}
-	//--------------------------------------------------------
-
-	//マルチスレッドを開始する（即座に制御を返す）
-	WaitForSingleObject(hHandle, 0);
+//---------------------------------------------------------------------------
+// 再帰的にディレクトリを作成（strPathの末尾には必ず\をつけること）
+bool CreateDirectoryReflex(const string &strPath) {
+	const char *p = strPath.c_str();
+	for (; *p; p += IsShiftJIS(*p) ? 2 : 1)
+		if (*p == '\\') {
+			string strSubPath(strPath.c_str(), p);
+			if (!IsFileExist(strSubPath.c_str()))
+				if (!CreateDirectory(strSubPath.c_str(), NULL))
+					return false;
+		}
+	return true;
 }
 
-//-----------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+/* unz_file_info_interntal contain internal info about a file in zipfile*/
+typedef struct unz_file_info64_internal_s
+{
+	ZPOS64_T offset_curfile;/* relative offset of local header 8 bytes */
+} unz_file_info64_internal;
+/* file_in_zip_read_info_s contain internal information about a file in zipfile,
+when reading and decompress it */
+typedef struct
+{
+	char  *read_buffer;         /* internal buffer for compressed data */
+	z_stream stream;            /* zLib stream structure for inflate */
+
+#ifdef HAVE_BZIP2
+	bz_stream bstream;          /* bzLib stream structure for bziped */
+#endif
+
+	ZPOS64_T pos_in_zipfile;       /* position in byte on the zipfile, for fseek*/
+	uLong stream_initialised;   /* flag set if stream structure is initialised*/
+
+	ZPOS64_T offset_local_extrafield;/* offset of the local extra field */
+	uInt  size_local_extrafield;/* size of the local extra field */
+	ZPOS64_T pos_local_extrafield;   /* position in the local extra field in read*/
+	ZPOS64_T total_out_64;
+
+	uLong crc32;                /* crc32 of all data uncompressed */
+	uLong crc32_wait;           /* crc32 we must obtain after decompress all */
+	ZPOS64_T rest_read_compressed; /* number of byte to be decompressed */
+	ZPOS64_T rest_read_uncompressed;/*number of byte to be obtained after decomp*/
+	zlib_filefunc64_32_def z_filefunc;
+	voidpf filestream;        /* io structore of the zipfile */
+	uLong compression_method;   /* compression method (0==store) */
+	ZPOS64_T byte_before_the_zipfile;/* byte before the zipfile, (>0 for sfx)*/
+	int   raw;
+} file_in_zip64_read_info_s;
+typedef struct
+{
+	zlib_filefunc64_32_def z_filefunc;
+	int is64bitOpenFunction;
+	voidpf filestream;        /* io structore of the zipfile */
+	unz_global_info64 gi;       /* public global information */
+	ZPOS64_T byte_before_the_zipfile;/* byte before the zipfile, (>0 for sfx)*/
+	ZPOS64_T num_file;             /* number of the current file in the zipfile*/
+	ZPOS64_T pos_in_central_dir;   /* pos of the current file in the central dir*/
+	ZPOS64_T current_file_ok;      /* flag about the usability of the current file*/
+	ZPOS64_T central_pos;          /* position of the beginning of the central dir*/
+
+	ZPOS64_T size_central_dir;     /* size of the central directory  */
+	ZPOS64_T offset_central_dir;   /* offset of start of central directory with
+								   respect to the starting disk number */
+
+	unz_file_info64 cur_file_info; /* public info about the current file in zip*/
+	unz_file_info64_internal cur_file_info_internal; /* private info about it*/
+	file_in_zip64_read_info_s* pfile_in_zip_read; /* structure about the current
+												  file if we are decompressing it */
+	int encrypted;
+
+	int isZip64;
+
+#    ifndef NOUNCRYPT
+	unsigned long keys[3];     /* keys defining the pseudo-random sequence */
+	const z_crc_t* pcrc_32_tab;
+#    endif
+} unz64_s;
+//----------------------------------------------------------------------------------------------
 
 //フォルダ削除 関係------------------------------------------------------------------------------
 //この関数の引数fileNameは\で終わってはいけません。 
@@ -137,7 +150,6 @@ bool removeDirectory(std::string fileName)
 
 	return retVal;
 }
-
 //----------------------------------------------------------------------------------------------
 
 
@@ -178,24 +190,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	bool majorupdate = 0;
 	size_t p = data.find("tag_name");
 	std::string ver = data.substr(p + 11, (data.find(",", p) - 1) - (p + 11));
-	if (ver.substr(ver.rfind(".")+1, 1) == "0")majorupdate = 1;
+	if (ver.substr(ver.rfind(".") + 1, 1) == "0")majorupdate = 1;
 
 	//ダウンロード----------------------------------------------------------------------------------
-
 	size_t up = data.find("browser_download_url");
 	std::string url = data.substr(up + 23, (data.find('?"', up + 23)) - (up + 23));
-	
+
 	WebDownloader* dl = new WebDownloader();
 	int r = dl->httpsOpen(
 		(char *)"github.com",
 		(char *)url.substr(19, url.size()).c_str(),
 		(char *)"github.com",
 		(char *)"./", //.exeと同じディレクトリなら「"./"」
-		(char *)"Update.exe"                     //拡張子も必要なので注意
+		(char *)"Update.zip"                     //拡張子も必要なので注意
 	);
 	if (r == 0)dl->StartDownload();
-
-	int mastload = dl->getDownloadSize();
 
 	//ダウンロード
 	while (ProcessMessage() == 0)
@@ -214,11 +223,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 			ui.changeBoxRoundedBar(inbox, e, 30, GetColor(195, 216, 37), GetColor(195, 216, 37), 0);
 			ui.drawBox(inbox, 128);
-			if (e < ((double)dl->getReadSize() / (double)mastload) * (double)390)e += 1;
+
+			if (e < ((double)dl->getReadSize() / (double)dl->getDownloadSize()) * (double)390)e += 2;
 
 			ui.drawString(font, std::to_string(dl->getReadSize()) + u8" / " + std::to_string(dl->getDownloadSize()) + u8" Byte", 640, 335, 1);
 
-			if (dl->getReadSize() >= dl->getDownloadSize())break;
+			if (dl->getReadSize() >= dl->getDownloadSize()) {
+				WaitTimer(3000);
+				break;
+			}
 		}
 		else
 		{
@@ -230,23 +243,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		//fps.displayFps(1280 - 20, 0);
 		fps.measureFps();
 	}
-	
 
 	//アップデート----------------------------------------------------------------------------------
-	update();
-	
-	BYTE pbBuffer[4096];
-	memset(pbBuffer, '\0', 4096);
-
-	DWORD olddwAvailSize = 0;
-
-	std::string ss;
 	e = 0;
 	bool installed = 0, remove = 0;
-
 	if (!majorupdate)remove = 1;
 
-	size_t timer = 0;
+	string strZipFilename = "Update.zip", strTargetPath = "";
+	unzFile hUnzip = unzOpen(strZipFilename.c_str());
+	if (!hUnzip) {
+		MessageBox(GetMainWindowHandle(), "ファイルを開けません", "error", MB_OK);
+		return 0;
+	}
+	unz64_s* s;
+	s = (unz64_s*)hUnzip;
+	size_t zipfilesize = s->offset_central_dir,nowfilesize = 0.0;
+
 	while (ProcessMessage() == 0)
 	{
 		ui.drawBackgroundImage();
@@ -255,6 +267,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		ui.drawString(font2, u8"インストール中です", 640, 250, 1);
 
+		ui.drawBox(box, 128);
+
+		ui.changeBoxRoundedBar(inbox, e, 30, GetColor(195, 216, 37), GetColor(195, 216, 37), 0);
+		ui.drawBox(inbox, 128);
+
 		if (!remove) {
 			removeDirectory("System");
 
@@ -262,63 +279,55 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		else {
 
-			DWORD dwAvailSize = 0;
+			char szConFilename[512];
+			unz_file_info fileInfo;
+			if (unzGetCurrentFileInfo(hUnzip, &fileInfo, szConFilename, sizeof szConFilename, NULL, 0, NULL, 0) != UNZ_OK)
+			break;
 
-			PeekNamedPipe(hReadPipe, NULL, 0, NULL, &dwAvailSize, NULL);
+			int nLen = strlen(szConFilename);
+			for (int i = 0; i < nLen; ++i)
+				if (szConFilename[i] == '/')
+					szConFilename[i] = '\\';
 
-			memset(pbBuffer, '\0', olddwAvailSize);
-			olddwAvailSize = dwAvailSize;
+			// ディレクトリの場合
+			//if (nLen >= 2 && !IsShiftJIS(szConFilename[nLen - 2]) && szConFilename[nLen - 1] == '\\') {
+			//	CreateDirectoryReflex(strTargetPath + szConFilename);
+			//	continue;
+			//}
 
-			if (dwAvailSize > 0)
-			{
-				DWORD dwRead = 0;
-				ReadFile(hReadPipe, pbBuffer, sizeof(pbBuffer), &dwRead, NULL);
+			// ファイルの場合
+			if (unzOpenCurrentFile(hUnzip) != UNZ_OK)break;
+			CreateDirectoryReflex(strTargetPath + szConFilename);
+			HANDLE hFile = CreateFile((strTargetPath + szConFilename).c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+			BYTE szBuffer[8192];
+			DWORD dwSizeRead;
+			while ((dwSizeRead = unzReadCurrentFile(hUnzip, szBuffer, sizeof szBuffer)) > 0)
+				WriteFile(hFile, szBuffer, dwSizeRead, &dwSizeRead, NULL);
+			FlushFileBuffers(hFile);
+			CloseHandle(hFile);
+			unzCloseCurrentFile(hUnzip);
+
+			if (unzGoToNextFile(hUnzip) == UNZ_END_OF_LIST_OF_FILE) {
+
+				unzClose(hUnzip);
+				installed = 1;
+				break;
 			}
-			else {
-				if (WAIT_OBJECT_0 == WaitForSingleObject(m_ChildProcess, 0))
-				{
-					if (e >= 390) {
-						installed = 1;
-						break;
-					}
-				}
-			}
 
-			std::string s((char*)pbBuffer);
+			nowfilesize += fileInfo.compressed_size;
 
-			if (s == "")timer++; else timer = 0;
-			if (timer > 1000) {
-				MessageBox(GetMainWindowHandle(), "エラーが発生しました", "error", MB_OK);
-				return 0;
-			}
+			ui.drawString(font, std::to_string(nowfilesize) + u8" / " + std::to_string(zipfilesize) + u8" Byte", 640, 335, 1);
 
-			if (s.size() > 0) {
-				size_t t = 0;
-				while (1) {
-					if (s.find('%', t) == std::string::npos)break;
-					t = s.find('%', t);
-					t += 1;
-				}
-
-				if (t != 0) {
-					ss = s.substr(t - 3, 3);
-				}
-			}
+			if (e < ((double)nowfilesize / (double)zipfilesize) * (double)390)e += 2;
 		}
-
-		ui.drawBox(box, 128);
-
-		ui.changeBoxRoundedBar(inbox, e, 30, GetColor(195, 216, 37), GetColor(195, 216, 37), 0);
-		ui.drawBox(inbox, 128);
-		if (e < ((std::atof(ss.substr(0, 2).c_str()) + 10.0) / (double)100) * (double)390)if (e < 390)e += 1;
 
 		//fps.displayFps(1280 - 20, 0);
 		fps.measureFps();
 	}
-	
+
 	//MikuMikuOpenWorldの起動-------------------------------------------------------------------------------------
 	if (installed) {
-		DeleteFile("Update.exe");
+		DeleteFile("Update.zip");
 		struct stat buf;
 
 		while (ProcessMessage() == 0)
@@ -330,7 +339,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			ui.drawString(font2, u8"終了しています", 640, 250, 1);
 
 			//消えるまで待つ
-			if (stat("Update.exe", &buf) != 0)break;
+			if (stat("Update.zip", &buf) != 0)break;
 
 			//fps.displayFps(1280 - 20, 0);
 			fps.measureFps();
@@ -350,7 +359,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			//失敗した場合のエラー処理
 			MessageBox(GetMainWindowHandle(), "ShellExecuteEx Failed.", "error", MB_OK);//エラー表示
 		}
-
+	}
+	else {
+		MessageBox(GetMainWindowHandle(), "エラーが発生しました", "error", MB_OK);
 	}
 
 	DxLib_End();
