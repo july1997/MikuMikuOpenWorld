@@ -2,7 +2,10 @@
 MikuMikuDanceを始めとするコンテンツにゲームに使えそうなものが多くあります。<br>
 そのような既存の素材を利用し、オープンワールドのゲームを作ろうというものです<br>
 <br>
-・ダウンロード<br>
+There are many object that can be used for develop games in models for MikuMikuDance.<br>
+We are going to make a open-world game using such models.<br>
+<br>
+・Download<br>
 * [Cliant 0.0.2 (zip)](https://github.com/july1997/MikuMikuOpenWorld/releases/download/Ver0.0.2/MikuMikuOpenWorld.zip)<br>
 <br>
 ・更新履歴<br>
